@@ -16,18 +16,40 @@
 #
 from google.appengine.api import users
 import webapp2
+import cgi
+
+FORM_HTML = """\
+<html>
+    <body>
+        <form action="/sign" method="post">
+            <div><textarea name="content" rows="3" cols="60"></textarea></div>
+            <div><input type="submit" value="Submit Content"></div>
+        </form>
+    </body>
+</html>
+"""
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        user = users.get_current_user()
+        self.response.headers['Content-Type'] = 'text/html'
+        self.response.write(FORM_HTML)
 
-        self.response.headers['Content-Type'] = 'text/plain'
-        if user:
-            self.response.write('Hello, ' + user.nickname())
-        else:
-            #self.response.write('Hello water!')
-            self.redirect(users.create_login_url(self.request.uri))
+        # user = users.get_current_user()
+        # self.response.headers['Content-Type'] = 'text/plain'
+        # if user:
+        #     self.response.write('Hello, ' + user.nickname())
+        # else:
+        #     self.response.write('Hello water!')
+        #     self.redirect(users.create_login_url(self.request.uri))
+
+
+class GuestBook(webapp2.RequestHandler):
+    def post(self):
+        self.response.write('<html><body>You wrote:<pre>')
+        self.response.write(cgi.escape(self.request.get('content')))
+        self.response.write('</pre></body></html>')
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler)
+    ('/', MainHandler),
+    ('/sign', GuestBook)
 ], debug=True)
