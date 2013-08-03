@@ -4,10 +4,10 @@ import webapp2
 MAIN_HTML = """\
 <html>
     <body>
-        <p>Water Main 2</p>
-        <p><a href="/user">User</a></p>
-        <p><a href="/test">Form</a></p>
-        <p><a href="/hello">Hello</a></p>
+        <p>Test Menu</p>
+        <p><a href="/test/hello">Hello</a></p>
+        <p><a href="/test/user">User</a></p>
+        <p><a href="/test/form">Form</a></p>
     </body>
 </html>
 """
