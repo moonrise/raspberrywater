@@ -5,9 +5,9 @@ import cgi
 FORM_HTML = """\
 <html>
     <body>
-        <form action="/form/sign" method="post">
+        <form action="/test/sign" method="post">
             <div><textarea name="content" rows="3" cols="60"></textarea></div>
-            <div><input type="submit" value="Submit Form Content"></div>
+            <div><input type="submit" value="Submit Test Form Content"></div>
         </form>
     </body>
 </html>
@@ -25,6 +25,6 @@ class GuestBook(webapp2.RequestHandler):
         self.response.write('</pre></body></html>')
 
 app = webapp2.WSGIApplication([
-    ('/form', FormHandler),
-    ('/form/sign', GuestBook)
+    ('/test', FormHandler),
+    ('/test/sign', GuestBook)
 ], debug=True)

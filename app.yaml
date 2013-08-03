@@ -1,22 +1,25 @@
 application: waterthem
-version: 1
+version: 3
 runtime: python27
 api_version: 1
 threadsafe: yes
 
 handlers:
+- url: /test.*
+  script: test.app
+
+- url: /hello.*
+  script: hello.app
+
+- url: /user.*
+  script: user.app
+
 - url: /favicon\.ico
   static_files: favicon.ico
   upload: favicon\.ico
 
 - url: /s
   static_dir: app
-
-- url: /user.*
-  script: user.app
-
-- url: /form.*
-  script: form.app
 
 - url: .*
   script: main.app
