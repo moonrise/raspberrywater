@@ -12,6 +12,12 @@ handlers:
 - url: /s
   static_dir: app
 
+- url: /user.*
+  script: user.app
+
+- url: /form.*
+  script: form.app
+
 - url: .*
   script: main.app
 
