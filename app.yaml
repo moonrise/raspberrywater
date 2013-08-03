@@ -13,13 +13,13 @@ handlers:
   static_dir: app
 
 - url: /test/hello
-  script: test.hello
+  script: sandbox.test.hello
 
 - url: /test/form.*
-  script: test.form
+  script: sandbox.test.form
 
 - url: /test/user.*
-  script: test.user
+  script: sandbox.test.user
 
 - url: .*
   script: main.app
