@@ -21,6 +21,9 @@ handlers:
 - url: /test/user.*
   script: sandbox.test.user
 
+- url: /test/hrd.*
+  script: sandbox.hrdstore.application
+
 - url: .*
   script: main.app
 
