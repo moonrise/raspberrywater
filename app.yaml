@@ -21,6 +21,9 @@ handlers:
 - url: /test/user.*
   script: sandbox.test.user
 
+- url: /test/hrd2.*
+  script: sandbox.hrdstore2.application
+
 - url: /test/hrd.*
   script: sandbox.hrdstore.application
 
@@ -30,3 +33,5 @@ handlers:
 libraries:
 - name: webapp2
   version: "2.5.2"
+- name: jinja2
+  version: latest
