@@ -4,6 +4,9 @@ import webapp2
 MAIN_HTML = """\
 <html>
     <body>
+        <br>
+        <p><a href="/app/main"><b>Water Them</b></a></p>
+        <br>
         <p>Test Menu (v1)</p>
         <p><a href="/test/hello">Hello</a></p>
         <p><a href="/test/user">User</a></p>

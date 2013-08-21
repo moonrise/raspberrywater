@@ -12,6 +12,9 @@ handlers:
 - url: /s
   static_dir: app
 
+- url: /app.*
+  script: waterapp.ticketstore.main
+
 - url: /test/hello
   script: sandbox.test.hello
 

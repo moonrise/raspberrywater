@@ -3,7 +3,7 @@
   <component name="FacetManager">
     <facet type="google-appengine-python" name="Google App Engine (Python)">
       <configuration>
-        <option name="rootFolder" value="C:\Users\bjeong\IdeaProjects\raspberrywater" />
+        <option name="rootFolder" value="C:\Users\bjeong\IdeaProjects\raspberry" />
         <option name="sdkFolder" value="D:\bjdev\appengine182" />
         <option name="templatesFolder" value="" />
         <option name="email" value="openbj@gmail.com" />
