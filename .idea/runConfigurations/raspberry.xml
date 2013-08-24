@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="raspberry" type="Python.AppEngineServer" factoryName="App Engine server">
+  <configuration default="false" name="raspberry" type="Python.AppEngineServer" factoryName="App Engine server" singleton="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs />
@@ -11,7 +11,9 @@
     <option name="launchJavascriptDebuger" value="false" />
     <option name="browserUrl" value="http://127.0.0.1:8080/" />
     <option name="additionalOptions" value="" />
+    <RunnerSettings RunnerId="PyDebugRunner" />
     <RunnerSettings RunnerId="Run" />
+    <ConfigurationWrapper RunnerId="PyDebugRunner" />
     <ConfigurationWrapper RunnerId="Run" />
     <method />
   </configuration>

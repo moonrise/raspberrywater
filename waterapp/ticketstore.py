@@ -6,7 +6,7 @@ import webapp2
 
 MAIN_PAGE_FOOTER_TEMPLATE = """\
     <form action="/app/request?%s" method="post">
-      <div><textarea name="content" rows="3" cols="60"></textarea></div>
+      <div><textarea name="comment" rows="3" cols="60"></textarea></div>
       <div><input type="submit" value="Request Water Squirt"></div>
     </form>
     <hr>
@@ -24,41 +24,74 @@ def GetHydroidUnitKey(hydroidUnitId=HYDROID_UNIT_ID):
     """Constructs a Datastore key for a hydroid unit instance id."""
     return ndb.Key('HydroidUnit', hydroidUnitId)
 
+def GetSingletonTicketKey(hydroidUnitId=HYDROID_UNIT_ID):
+    return ndb.Key(Ticket, '1', parent=GetHydroidUnitKey(hydroidUnitId))
+
+class Ticket(ndb.Model):
+    ticket = ndb.IntegerProperty(indexed=False)
+    drops = ndb.IntegerProperty(indexed=False)
+    comment = ndb.StringProperty(indexed=False)
+    date = ndb.DateTimeProperty(auto_now_add=False)
 
 class Delivery(ndb.Model):
-    author = ndb.StringProperty(indexed=False)
-    content = ndb.StringProperty(indexed=False)
-    date = ndb.DateTimeProperty(auto_now_add=True)
+    ticket = ndb.IntegerProperty(indexed=True)
+    drops = ndb.IntegerProperty(indexed=False)
+    comment = ndb.StringProperty(indexed=False)
+    date = ndb.DateTimeProperty(auto_now_add=False)
 
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
         self.response.write('<html><body>')
+
+        # get the current hydroid unit id
         hydroidUnitId = self.request.get('hydroid_unit_id', HYDROID_UNIT_ID)
 
+        # get the singleton ticket
+        singletonTicket = GetSingletonTicketKey(hydroidUnitId).get()
+        if not singletonTicket:
+            ticket = Ticket(key=GetSingletonTicketKey(hydroidUnitId))
+            ticket.ticket = 1
+            ticket.drops = 0
+            ticket.comment = 'no request'
+            ticket.put()
+            singletonTicket = GetSingletonTicketKey(hydroidUnitId).get() # get it right back
+
+        # title
+        self.response.write('<br>Hydroid Unit: <b>%s</b><br>' % hydroidUnitId)
+
+        # current request stat
+        self.response.write('<br><hr>Current Request Queue<br>')
+        self.response.write('Ticket number: %d<br>' % singletonTicket.ticket)
+        self.response.write('Drop count: %d<br>' % singletonTicket.drops)
+        self.response.write('Comment: %s<br>' % singletonTicket.comment)
+
+        # history
+        self.response.write('<br><hr>History<br>')
         deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(hydroidUnitId)).order(-Delivery.date)
         deliveryHistoryList = deliveryHistoryQuery.fetch(10)
 
         for delivery in deliveryHistoryList:
-            if delivery.author:
-                self.response.write('<b>%s</b> wrote:' % cgi.escape(delivery.author))
-            else:
-                self.response.write('An anonymous person wrote:')
-            self.response.write('<blockquote>%s</blockquote>' % cgi.escape(delivery.content))
+            if delivery.comment:
+                self.response.write('comment: %s' % cgi.escape(delivery.comment))
 
-        # Write the submission form and the footer of the page
+        # request form
+        self.response.write('<br><hr>Make Request<br>')
         sign_query_params = urllib.urlencode({'hydroid_unit_id': hydroidUnitId})
         self.response.write(MAIN_PAGE_FOOTER_TEMPLATE % (sign_query_params, cgi.escape(hydroidUnitId)))
 
 
 class DeliveryRequest(webapp2.RequestHandler):
     def post(self):
+        # request water drop
         hydroidUnitId = self.request.get('hydroid_unit_id', HYDROID_UNIT_ID)
-        delivery = Delivery(parent=GetHydroidUnitKey(hydroidUnitId))
-        delivery.author = "Me"
-        delivery.content = self.request.get('content')
-        delivery.put()
+        singletonTicket = GetSingletonTicketKey(hydroidUnitId).get()
+        singletonTicket.ticket += 1
+        singletonTicket.drops = 1
+        singletonTicket.comment = self.request.get('comment')
+        singletonTicket.put()
 
+        # back to main page
         query_params = {'hydroid_unit_id': hydroidUnitId}
         self.redirect('/app/main?' + urllib.urlencode(query_params))
 
