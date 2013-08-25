@@ -86,7 +86,8 @@ class DeliveryRequest(webapp2.RequestHandler):
         # request water drop
         hydroidUnitId = self.request.get('hydroid_unit_id', HYDROID_UNIT_ID)
         singletonTicket = GetSingletonTicketKey(hydroidUnitId).get()
-        singletonTicket.ticket += 1
+        if singletonTicket.drops == 0:
+            singletonTicket.ticket += 1
         singletonTicket.drops = 1
         singletonTicket.comment = self.request.get('comment')
         singletonTicket.put()
