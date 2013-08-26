@@ -1,0 +1,54 @@
+/* remove jQuery mobile added text shadow */
+/*
+.ui-body-c, .ui-overlay-c { text-shadow:0 0 0; }
+*/
+
+.section-div {
+    border: 1px solid #456f9a;
+    padding: 0px;
+}
+
+.section-header {
+    background: #456f9a;
+    padding: 5px;
+    margin: -1px;
+    color: #fff;
+    font-size: 1.1em;
+    font-weight: normal;
+	text-shadow: 0 /*{b-bar-shadow-x}*/ 1px /*{b-bar-shadow-y}*/ 0 /*{b-bar-shadow-radius}*/ #3e6790 /*{b-bar-shadow-color}*/;
+	background-image: -webkit-gradient(linear, left top, left bottom, from( #6facd5 /*{b-bar-background-start}*/), to( #497bae /*{b-bar-background-end}*/)); /* Saf4+, Chrome */
+	background-image: -webkit-linear-gradient( #6facd5 /*{b-bar-background-start}*/, #497bae /*{b-bar-background-end}*/); /* Chrome 10+, Saf5.1+ */
+	background-image:    -moz-linear-gradient( #6facd5 /*{b-bar-background-start}*/, #497bae /*{b-bar-background-end}*/); /* FF3.6 */
+	background-image:     -ms-linear-gradient( #6facd5 /*{b-bar-background-start}*/, #497bae /*{b-bar-background-end}*/); /* IE10 */
+	background-image:      -o-linear-gradient( #6facd5 /*{b-bar-background-start}*/, #497bae /*{b-bar-background-end}*/); /* Opera 11.10+ */
+	background-image:         linear-gradient( #6facd5 /*{b-bar-background-start}*/, #497bae /*{b-bar-background-end}*/);
+}
+
+.section-line-item {
+    padding: 5px;
+    margin: 2px;
+}
+
+.section-line-item-bottom-bordered {
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.3);
+    /*border: 1px solid red;*/
+    padding: 5px;
+    margin: 2px;
+}
+
+.section-line-header {
+    display: inline-block;
+    margin: 2px;
+    width: 90px;
+    font-size: 1em;
+    font-style: oblique;
+    color: rgba(0, 0, 0, 0.70);
+}
+
+.section-line-value {
+    display: inline-block;
+    margin: 2px;
+    font-size: 1em;
+    font-weight: bold;
+    color: #0e1168;
+}

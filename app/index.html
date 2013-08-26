@@ -1,9 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title></title>
+    <title>Hyrdoid</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!--
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.1/jquery.mobile-1.2.1.min.css" />
+    <script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.2.1/jquery.mobile-1.2.1.min.js"></script>
+    -->
+
+    <!--
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.css"/>
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.js"></script>
+    -->
+
+    <link rel="stylesheet" href="jquery.mobile-1.3.2.css"/>
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="jquery.mobile-1.3.2.js"></script>
+
+    <!--
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.0-alpha.2/jquery.mobile-1.4.0-alpha.2.min.css">
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.0-alpha.2/jquery.mobile-1.4.0-alpha.2.min.js"></script>
+    -->
+
+    <link rel="stylesheet" href="main.css"/>
 </head>
+
 <body>
-    <p>Main App</p>
+
+<div data-role="page" data-theme="e">
+    <div data-role="header">
+        <h3>Hydroid - Remote Watering</h3>
+    </div>
+
+    <div data-role="content">
+        <div class="section-div">
+            <div class="section-header">pending request</div>
+            <div class="section-line-item-bottom-bordered">
+                <div class="section-line-header">ticket:</div>
+                <p class="section-line-value">122</p>
+            </div>
+            <div class="section-line-item-bottom-bordered">
+                <div class="section-line-header">drops:</div>
+                <p class="section-line-value">1</p>
+            </div>
+            <div class="section-line-item-bottom-bordered">
+                <div class="section-line-header">data & time:</div>
+                <p class="section-line-value">8/30/2013, 12:20 PM</p>
+            </div>
+            <div class="section-line-item">
+                <div class="section-line-header">comment:</div>
+                <p class="section-line-value">This is a comment line</p>
+            </div>
+        </div>
+
+        <div data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
+             data-collapsed="false" data-corners="false" style="margin-top:20px">
+            <legend>new request</legend>
+
+            <div data-role="fieldcontain">
+                <label for="drop-count">drops:</label>
+                <input type="range" name="drop-count" id="drop-count" value="1" min="0" max="5" data-mini="true"
+                       data-highlight="true" data-theme="b" data-track-theme="d">
+            </div>
+
+            <div data-role="fieldcontain">
+                <label for="comment-input">comment:</label>
+                <input type="text" name="comment-input" id="comment-input" data-theme="b" value="">
+            </div>
+
+            <input type="submit" value="Request Water Squirt" data-icon="grid" data-iconpos="right" data-mini="true"
+                   data-theme="b">
+        </div>
+
+        <div data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
+             data-collapsed="true" data-corners="false" style="margin-top:20px">
+            <legend>History</legend>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
