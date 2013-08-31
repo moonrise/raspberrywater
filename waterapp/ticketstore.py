@@ -3,6 +3,7 @@ import cgi
 import urllib
 from google.appengine.ext import ndb
 import webapp2
+import json
 
 MAIN_PAGE_FOOTER_TEMPLATE = """\
     <form action="/app/request?%s" method="post">
@@ -27,17 +28,29 @@ def GetHydroidUnitKey(hydroidUnitId=HYDROID_UNIT_ID):
 def GetSingletonTicketKey(hydroidUnitId=HYDROID_UNIT_ID):
     return ndb.Key(Ticket, '1', parent=GetHydroidUnitKey(hydroidUnitId))
 
+def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
+    # get the singleton ticket - returns a valid non-empty ticket always
+    singletonTicket = GetSingletonTicketKey(hydroidUnitId).get()
+    if not singletonTicket:
+        ticket = Ticket(key=GetSingletonTicketKey(hydroidUnitId))
+        ticket.ticket = 1
+        ticket.drops = 0
+        ticket.comment = 'no request'
+        ticket.put()
+        singletonTicket = GetSingletonTicketKey(hydroidUnitId).get() # get it right back
+    return singletonTicket
+
 class Ticket(ndb.Model):
     ticket = ndb.IntegerProperty(indexed=False)
     drops = ndb.IntegerProperty(indexed=False)
     comment = ndb.StringProperty(indexed=False)
-    date = ndb.DateTimeProperty(auto_now_add=False)
+    date = ndb.IntegerProperty(indexed=False)
 
 class Delivery(ndb.Model):
     ticket = ndb.IntegerProperty(indexed=True)
     drops = ndb.IntegerProperty(indexed=False)
     comment = ndb.StringProperty(indexed=False)
-    date = ndb.DateTimeProperty(auto_now_add=False)
+    date = ndb.IntegerProperty(indexed=False)
 
 
 class MainPage(webapp2.RequestHandler):
@@ -81,6 +94,37 @@ class MainPage(webapp2.RequestHandler):
         self.response.write(MAIN_PAGE_FOOTER_TEMPLATE % (sign_query_params, cgi.escape(hydroidUnitId)))
 
 
+class JsonAPI(webapp2.RequestHandler):
+    def post(self):
+        # parse request
+        jsonRequest = json.loads(cgi.escape(self.request.body))
+
+        # response
+        self.response.headers['Content-Type'] = 'application/json'
+        command = jsonRequest['command']
+        if command == "fetchPendingRequest":
+            self.response.write(json.dumps(FetchPendingRequestStatus()))
+        elif command == "submitSquirtRequest":
+            self.response.write(json.dumps(SubmitSquirtRequest(jsonRequest)))
+
+def FetchPendingRequestStatus():
+    ticket = GetSingletonTicket()
+    return {'ticket': ticket.ticket,
+            'drops': ticket.drops,
+            'date': ticket.date,
+            'comment': ticket.comment
+           }
+
+def SubmitSquirtRequest(jsonRequest):
+    ticket = GetSingletonTicket()
+    if ticket.drops <= 0:   # only if the pending request was delivered (which means zero drops
+        ticket.ticket += 1
+    ticket.drops = int(jsonRequest['drops'])
+    ticket.comment = jsonRequest['comment']
+    ticket.date = int(jsonRequest['date'])
+    ticket.put()
+    return {}
+
 class DeliveryRequest(webapp2.RequestHandler):
     def post(self):
         # request water drop
@@ -100,4 +144,5 @@ class DeliveryRequest(webapp2.RequestHandler):
 main = webapp2.WSGIApplication([
     ('/app/main', MainPage),
     ('/app/request', DeliveryRequest),
+    ('/app/jsonApi', JsonAPI),
 ], debug=True)

@@ -13,7 +13,7 @@ var squirtMain = (function () {
 
     function appBootstrap() {
         // polled pending request update
-        updatePendingRequestRepeatedly();
+//        updatePendingRequestRepeatedly();
 
         // squirt request handler
         $("#request-squirt-button").click(onSquirtRequest);
@@ -25,24 +25,74 @@ var squirtMain = (function () {
     }
 
     function updatePendingRequest() {
+        $.ajax({
+            url: "/app/jsonApi",
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify({ id: 123, command: 'fetchPendingRequest' }),
+            success: onFetchPendingRequestStatusOK,
+            error: onFetchPendingRequestStatusNotOK,
+            complete: onFetchPendingRequestStatusDone
+        });
+    }
+
+    function onFetchPendingRequestStatusOK(jsonResponse) {
         updateCount++;
-        $("#ticket-value").text("" + updateCount);
 
-        var dropValue = $("#drop-input").val();
-        $("#drop-value").text("" + dropValue);
+        $("#ticket-value").text(jsonResponse.ticket.toString());
+        $("#drop-value").text(jsonResponse.drops.toString());
+        $("#datetime-value").text(moment(jsonResponse.date).format("hh:mm:ss a, MM/DD/YYYY"));
+        $("#comment-value").text(jsonResponse.comment);
+    }
 
-        var miliSinceEpoch = moment();
-        $("#datetime-value").text(moment(miliSinceEpoch).format("hh:mm:ss a, MM/DD/YYYY"));
+    function onFetchPendingRequestStatusNotOK(xhr, status) {
+    }
 
-        var commentValue = $("#comment-input").val();
-        $("#comment-value").text("" + commentValue);
+    function onFetchPendingRequestStatusDone(xhr, status) {
     }
 
     function onSquirtRequest() {
+        $.ajax(buildJsonAPIRequest("submitSquirtRequest",
+            collectSquirtRequestParameters(),
+            onSquirtRequestOK, onSquirtRequestNotOK, onSquirtRequestDone));
+    }
+
+    function collectSquirtRequestParameters() {
+        return {
+            drops: $("#drop-input").val(),
+            comment: $("#comment-input").val(),
+            date: moment().valueOf().toString()
+        }
+    }
+
+    function onSquirtRequestOK(jsonResponse) {
+    }
+
+    function onSquirtRequestNotOK(xhr, status) {
+    }
+
+    function onSquirtRequestDone(xhr, status) {
         updatePendingRequest();
     }
 
+    function buildJsonAPIRequest(command, params, onOK, onNotOK, onDone) {
+        var payload = {command: command};
+        $.extend(payload, params);
+
+        return {
+            url: "/app/jsonApi",
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify(payload),
+            success: onOK,
+            error: onNotOK,
+            complete: onDone
+        };
+    }
+
+    //
     // public API
+    //
     return {
         appBootstrap: appBootstrap
     }
