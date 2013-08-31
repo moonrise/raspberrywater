@@ -46,7 +46,7 @@
 
     <div data-role="content">
         <div class="section-div">
-            <div class="section-header">pending request</div>
+            <div id="pending-request-section-header" class="section-header">pending request</div>
             <div class="section-line-item-bottom-bordered">
                 <div class="section-line-header">ticket:</div>
                 <p id="ticket-value" class="section-line-value"/>
@@ -64,6 +64,9 @@
                 <p id="comment-value" class="section-line-value"/>
             </div>
         </div>
+
+        <a id="simulate-squirt-delivery-button" data-role="button" data-icon="grid" data-iconpos="right" data-mini="true"
+           data-theme="e">Simulate Squirt Delivery</a>
 
         <div data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
              data-collapsed="false" data-corners="false" style="margin-top:20px">

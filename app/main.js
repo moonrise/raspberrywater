@@ -13,10 +13,14 @@ var squirtMain = (function () {
 
     function appBootstrap() {
         // polled pending request update
-//        updatePendingRequestRepeatedly();
+        // updatePendingRequestRepeatedly();
+        updatePendingRequest();
 
         // squirt request handler
         $("#request-squirt-button").click(onSquirtRequest);
+
+        // simulate squirt delivery handler
+        $("#simulate-squirt-delivery-button").click(onSimulateSquirtDelivery);
     }
 
     function updatePendingRequestRepeatedly() {
@@ -25,24 +29,29 @@ var squirtMain = (function () {
     }
 
     function updatePendingRequest() {
-        $.ajax({
-            url: "/app/jsonApi",
-            type: "POST",
-            dataType: "json",
-            data: JSON.stringify({ id: 123, command: 'fetchPendingRequest' }),
-            success: onFetchPendingRequestStatusOK,
-            error: onFetchPendingRequestStatusNotOK,
-            complete: onFetchPendingRequestStatusDone
-        });
+        $.ajax(buildJsonAPIRequest("fetchPendingRequest", {},
+            onFetchPendingRequestStatusOK,
+            onFetchPendingRequestStatusNotOK,
+            onFetchPendingRequestStatusDone));
     }
 
     function onFetchPendingRequestStatusOK(jsonResponse) {
         updateCount++;
 
-        $("#ticket-value").text(jsonResponse.ticket.toString());
-        $("#drop-value").text(jsonResponse.drops.toString());
-        $("#datetime-value").text(moment(jsonResponse.date).format("hh:mm:ss a, MM/DD/YYYY"));
-        $("#comment-value").text(jsonResponse.comment);
+        if (jsonResponse.drops > 0) {
+            $("#pending-request-section-header").html("pending request");
+            $("#ticket-value").text(jsonResponse.ticket.toString());
+            $("#drop-value").text(jsonResponse.drops.toString());
+            $("#datetime-value").text(moment(jsonResponse.date).format("hh:mm:ss a, MM/DD/YYYY"));
+            $("#comment-value").text(jsonResponse.comment);
+        }
+        else {
+            $("#pending-request-section-header").html("no pending request");
+            $("#ticket-value").text("");
+            $("#drop-value").text("");
+            $("#datetime-value").text("");
+            $("#comment-value").text("");
+        }
     }
 
     function onFetchPendingRequestStatusNotOK(xhr, status) {
@@ -72,6 +81,20 @@ var squirtMain = (function () {
     }
 
     function onSquirtRequestDone(xhr, status) {
+        updatePendingRequest();
+    }
+
+    function onSimulateSquirtDelivery() {
+        $.ajax(buildJsonAPIRequest("confirmSquirtDelivery",
+            {
+                ticket: $("#ticket-value").text(),
+                date: moment().valueOf().toString(),
+                comment: "delivered"
+            },
+            null, null, onSimulateSquirtDeliveryDone));
+    }
+
+    function onSimulateSquirtDeliveryDone(xhr, status) {
         updatePendingRequest();
     }
 

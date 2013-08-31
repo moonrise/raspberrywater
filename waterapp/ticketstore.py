@@ -106,6 +106,8 @@ class JsonAPI(webapp2.RequestHandler):
             self.response.write(json.dumps(FetchPendingRequestStatus()))
         elif command == "submitSquirtRequest":
             self.response.write(json.dumps(SubmitSquirtRequest(jsonRequest)))
+        elif command == "confirmSquirtDelivery":
+            self.response.write(json.dumps(ConfirmSquirtDelivery(jsonRequest)))
 
 def FetchPendingRequestStatus():
     ticket = GetSingletonTicket()
@@ -124,6 +126,15 @@ def SubmitSquirtRequest(jsonRequest):
     ticket.date = int(jsonRequest['date'])
     ticket.put()
     return {}
+
+def ConfirmSquirtDelivery(jsonRequest):
+    ticket = GetSingletonTicket()
+    ticket.drops = 0
+    ticket.comment = ""
+    ticket.date = 0
+    ticket.put()
+    return {}
+
 
 class DeliveryRequest(webapp2.RequestHandler):
     def post(self):
