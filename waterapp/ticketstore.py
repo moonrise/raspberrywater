@@ -108,6 +108,8 @@ class JsonAPI(webapp2.RequestHandler):
             self.response.write(json.dumps(SubmitSquirtRequest(jsonRequest)))
         elif command == "confirmSquirtDelivery":
             self.response.write(json.dumps(ConfirmSquirtDelivery(jsonRequest)))
+        else:
+            self.response.write(json.dumps({'apierror':"%s is invalid command" % command}))
 
 def FetchPendingRequestStatus():
     ticket = GetSingletonTicket()

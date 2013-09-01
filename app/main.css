@@ -13,7 +13,7 @@
     padding: 5px;
     margin: -1px;
     color: #fff;
-    font-size: 1.1em;
+    font-size: 1em;
     font-weight: normal;
 	text-shadow: 0 /*{b-bar-shadow-x}*/ 1px /*{b-bar-shadow-y}*/ 0 /*{b-bar-shadow-radius}*/ #3e6790 /*{b-bar-shadow-color}*/;
 	background-image: -webkit-gradient(linear, left top, left bottom, from( #6facd5 /*{b-bar-background-start}*/), to( #497bae /*{b-bar-background-end}*/)); /* Saf4+, Chrome */

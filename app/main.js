@@ -8,24 +8,39 @@
  */
 
 var squirtMain = (function () {
-    var UPDATE_INTERVAL = 2000;
-    var updateCount = 0;
+    var UPDATE_INTERVAL = 1000;
+    var pendingRequestDrops = 0;
+    var remainingPollCount = 3;
 
     function appBootstrap() {
-        // polled pending request update
-        // updatePendingRequestRepeatedly();
         updatePendingRequest();
+
+        // polled pending request update
+        updatePendingRequestRepeatedly();
 
         // squirt request handler
         $("#request-squirt-button").click(onSquirtRequest);
 
         // simulate squirt delivery handler
         $("#simulate-squirt-delivery-button").click(onSimulateSquirtDelivery);
+
+        // refresh handler
+        $("#pending-request-refresh-button").click(onPendingRequestStatusRefreshButton);
     }
 
     function updatePendingRequestRepeatedly() {
-        updatePendingRequest();
+        if (remainingPollCount > 0) {
+            remainingPollCount--;
+            updatePendingRequest();
+        }
         setTimeout(updatePendingRequestRepeatedly, UPDATE_INTERVAL);
+    }
+
+    function activateTransientPolling() {
+        var maxPollCount = 60;
+        if (remainingPollCount < maxPollCount) {
+            remainingPollCount = Math.min(remainingPollCount + 10, maxPollCount);
+        }
     }
 
     function updatePendingRequest() {
@@ -36,22 +51,31 @@ var squirtMain = (function () {
     }
 
     function onFetchPendingRequestStatusOK(jsonResponse) {
-        updateCount++;
+        pendingRequestDrops = jsonResponse.drops;
+        updatePendingRequestStatusHeader();
 
         if (jsonResponse.drops > 0) {
-            $("#pending-request-section-header").html("pending request");
             $("#ticket-value").text(jsonResponse.ticket.toString());
             $("#drop-value").text(jsonResponse.drops.toString());
             $("#datetime-value").text(moment(jsonResponse.date).format("hh:mm:ss a, MM/DD/YYYY"));
             $("#comment-value").text(jsonResponse.comment);
         }
         else {
-            $("#pending-request-section-header").html("no pending request");
             $("#ticket-value").text("");
             $("#drop-value").text("");
             $("#datetime-value").text("");
             $("#comment-value").text("");
         }
+    }
+
+    function updatePendingRequestStatusHeader() {
+        var header = pendingRequestDrops > 0 ? "pending request" : "no pending request";
+
+        if (remainingPollCount > 0) {
+            header += (" (remaining poll count: " + remainingPollCount + ")");
+        }
+
+        $("#pending-request-section-header").html(header);
     }
 
     function onFetchPendingRequestStatusNotOK(xhr, status) {
@@ -82,6 +106,12 @@ var squirtMain = (function () {
 
     function onSquirtRequestDone(xhr, status) {
         updatePendingRequest();
+        activateTransientPolling();
+    }
+
+    function onPendingRequestStatusRefreshButton() {
+        updatePendingRequest();
+        activateTransientPolling();
     }
 
     function onSimulateSquirtDelivery() {
@@ -96,6 +126,7 @@ var squirtMain = (function () {
 
     function onSimulateSquirtDeliveryDone(xhr, status) {
         updatePendingRequest();
+        activateTransientPolling();
     }
 
     function buildJsonAPIRequest(command, params, onOK, onNotOK, onDone) {
