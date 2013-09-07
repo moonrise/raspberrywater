@@ -41,7 +41,7 @@
 
 <div data-role="page" data-theme="e">
     <div data-role="header">
-        <h3>Hydroid - Remote Watering</h3>
+        <h3>Hydroid</h3>
     </div>
 
     <div data-role="content">
@@ -87,13 +87,34 @@
                 <input type="text" id="comment-input" data-theme="b" value="">
             </div>
 
-            <a id="request-squirt-button" data-role="button" data-iconpos="right" data-mini="true"
-                   data-theme="b">Request Squirt</a>
+            <div>
+                <a id="request-squirt-button" data-role="button" data-mini="true"
+                   data-icon="gear" data-iconpos="right" data-theme="b"
+                   style="display: inline-block">Request Squirt</a>
+            </div>
         </div>
 
         <div data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
-             data-collapsed="true" data-corners="false" style="margin-top:20px">
+             data-collapsed="false" data-corners="false" style="margin-top:20px">
             <legend>History</legend>
+
+            <ul id="history-list" data-role="listview" data-inset="false" data-theme="c">
+                <li>
+                    <img src="images2/green-leaf-3.jpg" hspace="3" vspace="3"/>
+                    <!--<img src="images2/green-leaf-3.jpg" class="ui-li-icon-48"/>-->
+                    <p><strong>Filament Group in Boston, MA</strong></p>
+                    <p>you're available at 10am tomorrow meeting with the jQuery team.</p>
+                    <!--<p class="ui-li-aside"><strong>6:24</strong>PM</p>-->
+                </li>
+                <li>
+                    <a>
+                        <img src="images2/green-leaf-2.jpg" hspace="3" vspace="3"/>
+                        <p><strong>Boston Conference Planning</strong></p>
+                        <p>In preparation for the upcoming conference in Boston, we need to start gathering a list of sponsors and speakers.</p>
+                        <!--<p class="ui-li-aside"><strong>9:18</strong>AM</p>-->
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
 </div>

@@ -102,14 +102,24 @@ class JsonAPI(webapp2.RequestHandler):
         # response
         self.response.headers['Content-Type'] = 'application/json'
         command = jsonRequest['command']
-        if command == "fetchPendingRequest":
+        if command == "queryChangeState":
+            self.response.write(json.dumps(QueryChangeState()))
+        elif command == "fetchPendingRequest":
             self.response.write(json.dumps(FetchPendingRequestStatus()))
         elif command == "submitSquirtRequest":
             self.response.write(json.dumps(SubmitSquirtRequest(jsonRequest)))
         elif command == "confirmSquirtDelivery":
             self.response.write(json.dumps(ConfirmSquirtDelivery(jsonRequest)))
+        elif command == "fetchHistoryList":
+            self.response.write(json.dumps(F()))
         else:
             self.response.write(json.dumps({'apierror':"%s is invalid command" % command}))
+
+def QueryChangeState():
+    ticket = GetSingletonTicket()
+    return {'pendingStateCid': ticket.ticket,
+            'historyListCid': ticket.ticket,
+           }
 
 def FetchPendingRequestStatus():
     ticket = GetSingletonTicket()
@@ -137,6 +147,11 @@ def ConfirmSquirtDelivery(jsonRequest):
     ticket.put()
     return {}
 
+def FetchHistoryList():
+    ticket = GetSingletonTicket()
+    return {'length': 1,
+            'histories': {}
+           }
 
 class DeliveryRequest(webapp2.RequestHandler):
     def post(self):

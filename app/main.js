@@ -12,11 +12,15 @@ var squirtMain = (function () {
     var pendingRequestDrops = 0;
     var remainingPollCount = 3;
 
+    var myPendingStateCid = -1;
+    var myHistoryListCid = -1;
+
+
     function appBootstrap() {
-        updatePendingRequest();
+        updateRemoteState();
 
         // polled pending request update
-        updatePendingRequestRepeatedly();
+        updateRemoteStateRepeatedly();
 
         // squirt request handler
         $("#request-squirt-button").click(onSquirtRequest);
@@ -28,12 +32,12 @@ var squirtMain = (function () {
         $("#pending-request-refresh-button").click(onPendingRequestStatusRefreshButton);
     }
 
-    function updatePendingRequestRepeatedly() {
+    function updateRemoteStateRepeatedly() {
         if (remainingPollCount > 0) {
             remainingPollCount--;
-            updatePendingRequest();
+            updateRemoteState();
         }
-        setTimeout(updatePendingRequestRepeatedly, UPDATE_INTERVAL);
+        setTimeout(updateRemoteStateRepeatedly, UPDATE_INTERVAL);
     }
 
     function activateTransientPolling() {
@@ -43,16 +47,37 @@ var squirtMain = (function () {
         }
     }
 
-    function updatePendingRequest() {
-        $.ajax(buildJsonAPIRequest("fetchPendingRequest", {},
-            onFetchPendingRequestStatusOK,
-            onFetchPendingRequestStatusNotOK,
-            onFetchPendingRequestStatusDone));
+    function updateRemoteState() {
+        $.ajax(buildJsonAPIRequest("queryChangeState", {},
+            onQueryChangeState,
+            onQueryChangeStateNotOK,
+            onQueryChangeStateDone));
+    }
+
+    function onQueryChangeState(jsonResponse) {
+        var pendingStateCid = jsonResponse.pendingStateCid;
+        if (pendingStateCid != myPendingStateCid) {
+            myPendingStateCid = pendingStateCid;
+            $.ajax(buildJsonAPIRequest("fetchPendingRequest", {}, onFetchPendingRequestStatusOK));
+        }
+
+        var historyListCid = jsonResponse.historyListCid;
+        if (historyListCid != myHistoryListCid) {
+            myHistoryListCid = historyListCid;
+            $.ajax(buildJsonAPIRequest("fetchHistoryList", {}, onFetchHistoryListOK));
+        }
+    }
+
+    function onQueryChangeStateNotOK(xhr, status) {
+        // general connection problem?
+    }
+
+    function onQueryChangeStateDone(xhr, status) {
+        updatePendingRequestStatusHeader();
     }
 
     function onFetchPendingRequestStatusOK(jsonResponse) {
         pendingRequestDrops = jsonResponse.drops;
-        updatePendingRequestStatusHeader();
 
         if (jsonResponse.drops > 0) {
             $("#ticket-value").text(jsonResponse.ticket.toString());
@@ -68,6 +93,10 @@ var squirtMain = (function () {
         }
     }
 
+    function onFetchHistoryListOK(jsonResponse) {
+        var historyLength = jsonResponse.length;
+    }
+
     function updatePendingRequestStatusHeader() {
         var header = pendingRequestDrops > 0 ? "pending request" : "no pending request";
 
@@ -76,12 +105,6 @@ var squirtMain = (function () {
         }
 
         $("#pending-request-section-header").html(header);
-    }
-
-    function onFetchPendingRequestStatusNotOK(xhr, status) {
-    }
-
-    function onFetchPendingRequestStatusDone(xhr, status) {
     }
 
     function onSquirtRequest() {
@@ -105,12 +128,12 @@ var squirtMain = (function () {
     }
 
     function onSquirtRequestDone(xhr, status) {
-        updatePendingRequest();
+        updateRemoteState();
         activateTransientPolling();
     }
 
     function onPendingRequestStatusRefreshButton() {
-        updatePendingRequest();
+        updateRemoteState();
         activateTransientPolling();
     }
 
@@ -125,7 +148,7 @@ var squirtMain = (function () {
     }
 
     function onSimulateSquirtDeliveryDone(xhr, status) {
-        updatePendingRequest();
+        updateRemoteState();
         activateTransientPolling();
     }
 

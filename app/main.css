@@ -52,3 +52,7 @@
     font-weight: bold;
     color: #0e1168;
 }
+
+.ui-listview .ui-li-icon-48 { height: 72px; width: 72px; left: .3em; top: .3em; right: .3em; bottom: .3em; }
+/*.ui-listview .ui-li-icon-48 { height: 72px; width: 72px; left: .3em; top: .3em; right: .3em; bottom: .3em; }*/
+/*.ui-li-thumb, .ui-li-icon { height: 48px; width: 48px; left: .3em; top: .3em; right: .3em; bottom: .3em; }*/
