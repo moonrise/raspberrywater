@@ -50,12 +50,15 @@ class Ticket(ndb.Model):
     pendingStateCid = ndb.IntegerProperty(indexed=False)
     historyListCid = ndb.IntegerProperty(indexed=False)
 
+def GetDeliveryKey(key, hydroidUnitId=HYDROID_UNIT_ID):
+    return ndb.Key(Delivery, key, parent=GetHydroidUnitKey(hydroidUnitId))
+
 class Delivery(ndb.Model):
     ticket = ndb.IntegerProperty(indexed=True)
     drops = ndb.IntegerProperty(indexed=False)
     comment = ndb.StringProperty(indexed=False)
     requestDate = ndb.IntegerProperty(indexed=False)
-    DeliveryDate = ndb.IntegerProperty(indexed=False)
+    deliveryDate = ndb.IntegerProperty(indexed=False)
 
 
 class MainPage(webapp2.RequestHandler):
@@ -86,7 +89,7 @@ class MainPage(webapp2.RequestHandler):
 
         # history
         self.response.write('<br><hr>History<br>')
-        deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(hydroidUnitId)).order(-Delivery.requsetDate)
+        deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(hydroidUnitId)).order(-Delivery.requestDate)
         deliveryHistoryList = deliveryHistoryQuery.fetch(10)
 
         for delivery in deliveryHistoryList:
@@ -136,10 +139,13 @@ def FetchPendingRequestStatus():
 
 def SubmitSquirtRequest(jsonRequest):
     ticket = GetSingletonTicket()
-    if ticket.drops > 0:   # replace the pending request
-        # to-do: push the current one to the history list
+
+    # replace the pending request and move the old one to history
+    if ticket.drops > 0:
+        MoveToHistory(HYDROID_UNIT_ID)
         ticket.ticket += 1
-        ticket.historyListCid += 1
+
+    # new request
     ticket.drops = int(jsonRequest['drops'])
     ticket.comment = jsonRequest['comment']
     ticket.requestDate = int(jsonRequest['requestDate'])
@@ -148,7 +154,32 @@ def SubmitSquirtRequest(jsonRequest):
     return {}
 
 def ConfirmSquirtDelivery(jsonRequest):
+    deliveredTicket = jsonRequest.ticket
+    return {}
+
+def GetDeliveryItemForTicket(ticket, hydroidUnitId):
+    # target delivery - create one if not there
+    deliveryKey = GetDeliveryKey(ticket, hydroidUnitId)
+    delivery = deliveryKey.get()
+    if not delivery:
+        delivery = Delivery(key=deliveryKey)
+    return delivery
+
+def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
+    # source ticket
     ticket = GetSingletonTicket()
+
+    # target delivery - create one if not there
+    delivery = GetDeliveryItemForTicket(ticket.ticket, hydroidUnitId)
+
+    # copy from source to target
+    delivery.ticket = ticket.ticket
+    delivery.drops = ticket.drops
+    delivery.requestDate = ticket.requestDate
+    delivery.comment = ticket.comment
+    delivery.put()
+
+    # clear up source (the pending data) with the ticket incremented
     ticket.ticket += 1
     ticket.drops = 0
     ticket.comment = ""
@@ -156,13 +187,26 @@ def ConfirmSquirtDelivery(jsonRequest):
     ticket.pendingStateCid += 1
     ticket.historyListCid += 1
     ticket.put()
-    return {}
 
 def FetchHistoryList():
-    ticket = GetSingletonTicket()
-    return {'length': 1,
-            'histories': {}
-           }
+    deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).order(-Delivery.ticket)
+    deliveryHistoryList = deliveryHistoryQuery.fetch(10)
+
+    historyList = []
+    count = 0
+    for delivery in deliveryHistoryList:
+        count += 1
+        historyList.append({
+            'ticket': delivery.ticket,
+            'drops': delivery.drops,
+            'comment': delivery.comment,
+            'requestDate': delivery.requestDate,
+            'deliveryDate': delivery.deliveryDate
+        })
+
+    return {'length': historyList.__len__(),
+            'histories': historyList
+            }
 
 
 main = webapp2.WSGIApplication([

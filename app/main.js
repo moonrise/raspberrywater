@@ -93,7 +93,28 @@ var squirtMain = (function () {
     }
 
     function onFetchHistoryListOK(jsonResponse) {
-        var historyLength = jsonResponse.length;
+        // title area
+        var htmlTitle = "history <span style='font-weight: lighter; color: #7de0c2'><i> - most recent " + jsonResponse.length + "</i></span>";
+        $("#history-bar .ui-btn-text").html(htmlTitle); // $(#history-bar).html() destroys the style
+
+        // actual list
+        var liItems = buildHistoryList(jsonResponse.histories);
+        $("#history-list").html(liItems);
+        $("#history-list").listview('refresh');
+    }
+
+    function buildHistoryList(items) {
+        var htmlItems = [];
+
+        $.each(items, function(index, item) {
+            var e = ['<li>'];
+            e.push('<img src="images2/green-leaf-3.jpg" hspace="3" vspace="3"/>');
+            e.push('</li>');
+
+            htmlItems.push(e.join(''));
+        });
+
+        return htmlItems.join('');
     }
 
     function updatePendingRequestStatusHeader() {
@@ -144,8 +165,8 @@ var squirtMain = (function () {
         $.ajax(buildJsonAPIRequest("confirmSquirtDelivery",
             {
                 ticket: $("#ticket-value").text(),
-                date: moment().valueOf().toString(),
-                comment: "delivered"
+                deliveryDate: moment().valueOf().toString(),
+                note: "delivered"
             },
             null, null, onSimulateSquirtDeliveryDone));
     }
