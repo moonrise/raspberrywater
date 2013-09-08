@@ -107,9 +107,10 @@ var squirtMain = (function () {
     function buildHistoryList(items) {
         var htmlItems = [];
 
+        var random16 = Math.floor(Math.random() * 16);
         $.each(items, function(index, item) {
             var e = ['<li>'];
-            e.push('<img src="images2/green-leaf-3.jpg" hspace="3" vspace="3"/>');
+            e.push(sprintf('<img src="images2/green-leaf-%x.jpg" hspace="3" vspace="3"/>', ++random16 % 16));
             e.push('</li>');
 
             htmlItems.push(e.join(''));
