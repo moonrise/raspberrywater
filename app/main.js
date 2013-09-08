@@ -94,7 +94,8 @@ var squirtMain = (function () {
 
     function onFetchHistoryListOK(jsonResponse) {
         // title area
-        var htmlTitle = "history <span style='font-weight: lighter; color: #7de0c2'><i> - most recent " + jsonResponse.length + "</i></span>";
+        var formatter = "history <span style='font-weight: lighter; color: #7de0c2'><i> - most recent %d</i></span>";
+        var htmlTitle = sprintf(formatter,  jsonResponse.length);
         $("#history-bar .ui-btn-text").html(htmlTitle); // $(#history-bar).html() destroys the style
 
         // actual list
@@ -121,7 +122,9 @@ var squirtMain = (function () {
         var header = pendingRequestDrops > 0 ? "pending request" : "no pending request";
 
         if (remainingPollCount > 0) {
-            header += (" (remaining poll count: " + remainingPollCount + ")");
+            var formatter = "%s <span style='font-weight: lighter; color: #7de0c2'><i> - poll count %d</i></span>";
+            var htmlTitle = sprintf(formatter,  header, remainingPollCount);
+            header = htmlTitle;
         }
 
         $("#pending-request-section-header").html(header);
