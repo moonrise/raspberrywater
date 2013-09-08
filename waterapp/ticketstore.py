@@ -19,7 +19,7 @@ MAIN_PAGE_FOOTER_TEMPLATE = """\
 </html>
 """
 
-HYDROID_UNIT_ID = 'hydroid8'
+HYDROID_UNIT_ID = 'hydroid9'
 
 def GetHydroidUnitKey(hydroidUnitId=HYDROID_UNIT_ID):
     """Constructs a Datastore key for a hydroid unit instance id."""
@@ -33,9 +33,11 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
     singletonTicket = GetSingletonTicketKey(hydroidUnitId).get()
     if not singletonTicket:
         ticket = Ticket(key=GetSingletonTicketKey(hydroidUnitId))
-        ticket.ticket = 1
+        ticket.ticket = 1           # valid ticket starts from zero
         ticket.drops = 0
         ticket.comment = 'no request'
+        ticket.pendingStateCid = 0  # pending state change id
+        ticket.historyListCid = 0   # history list change id
         ticket.put()
         singletonTicket = GetSingletonTicketKey(hydroidUnitId).get() # get it right back
     return singletonTicket
@@ -45,6 +47,8 @@ class Ticket(ndb.Model):
     drops = ndb.IntegerProperty(indexed=False)
     comment = ndb.StringProperty(indexed=False)
     date = ndb.IntegerProperty(indexed=False)
+    pendingStateCid = ndb.IntegerProperty(indexed=False)
+    historyListCid = ndb.IntegerProperty(indexed=False)
 
 class Delivery(ndb.Model):
     ticket = ndb.IntegerProperty(indexed=True)
@@ -111,14 +115,14 @@ class JsonAPI(webapp2.RequestHandler):
         elif command == "confirmSquirtDelivery":
             self.response.write(json.dumps(ConfirmSquirtDelivery(jsonRequest)))
         elif command == "fetchHistoryList":
-            self.response.write(json.dumps(F()))
+            self.response.write(json.dumps(FetchHistoryList()))
         else:
             self.response.write(json.dumps({'apierror':"%s is invalid command" % command}))
 
 def QueryChangeState():
     ticket = GetSingletonTicket()
-    return {'pendingStateCid': ticket.ticket,
-            'historyListCid': ticket.ticket,
+    return {'pendingStateCid': ticket.pendingStateCid,
+            'historyListCid': ticket.historyListCid,
            }
 
 def FetchPendingRequestStatus():
@@ -131,19 +135,25 @@ def FetchPendingRequestStatus():
 
 def SubmitSquirtRequest(jsonRequest):
     ticket = GetSingletonTicket()
-    if ticket.drops <= 0:   # only if the pending request was delivered (which means zero drops
+    if ticket.drops > 0:   # replace the pending request
+        # to-do: push the current one to the history list
         ticket.ticket += 1
+        ticket.historyListCid += 1
     ticket.drops = int(jsonRequest['drops'])
     ticket.comment = jsonRequest['comment']
     ticket.date = int(jsonRequest['date'])
+    ticket.pendingStateCid += 1
     ticket.put()
     return {}
 
 def ConfirmSquirtDelivery(jsonRequest):
     ticket = GetSingletonTicket()
+    ticket.ticket += 1
     ticket.drops = 0
     ticket.comment = ""
     ticket.date = 0
+    ticket.pendingStateCid += 1
+    ticket.historyListCid += 1
     ticket.put()
     return {}
 
@@ -153,24 +163,8 @@ def FetchHistoryList():
             'histories': {}
            }
 
-class DeliveryRequest(webapp2.RequestHandler):
-    def post(self):
-        # request water drop
-        hydroidUnitId = self.request.get('hydroid_unit_id', HYDROID_UNIT_ID)
-        singletonTicket = GetSingletonTicketKey(hydroidUnitId).get()
-        if singletonTicket.drops == 0:
-            singletonTicket.ticket += 1
-        singletonTicket.drops = 1
-        singletonTicket.comment = self.request.get('comment')
-        singletonTicket.put()
-
-        # back to main page
-        query_params = {'hydroid_unit_id': hydroidUnitId}
-        self.redirect('/app/main?' + urllib.urlencode(query_params))
-
 
 main = webapp2.WSGIApplication([
     ('/app/main', MainPage),
-    ('/app/request', DeliveryRequest),
     ('/app/jsonApi', JsonAPI),
 ], debug=True)

@@ -79,14 +79,13 @@ var squirtMain = (function () {
     function onFetchPendingRequestStatusOK(jsonResponse) {
         pendingRequestDrops = jsonResponse.drops;
 
+        $("#ticket-value").text(jsonResponse.ticket.toString());
         if (jsonResponse.drops > 0) {
-            $("#ticket-value").text(jsonResponse.ticket.toString());
             $("#drop-value").text(jsonResponse.drops.toString());
             $("#datetime-value").text(moment(jsonResponse.date).format("hh:mm:ss a, MM/DD/YYYY"));
             $("#comment-value").text(jsonResponse.comment);
         }
         else {
-            $("#ticket-value").text("");
             $("#drop-value").text("");
             $("#datetime-value").text("");
             $("#comment-value").text("");
@@ -138,6 +137,10 @@ var squirtMain = (function () {
     }
 
     function onSimulateSquirtDelivery() {
+        if ($("#drop-value").text() <= 0) {
+            return
+        }
+
         $.ajax(buildJsonAPIRequest("confirmSquirtDelivery",
             {
                 ticket: $("#ticket-value").text(),
