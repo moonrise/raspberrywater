@@ -46,7 +46,7 @@ class Ticket(ndb.Model):
     ticket = ndb.IntegerProperty(indexed=False)
     drops = ndb.IntegerProperty(indexed=False)
     comment = ndb.StringProperty(indexed=False)
-    date = ndb.IntegerProperty(indexed=False)
+    requestDate = ndb.IntegerProperty(indexed=False)
     pendingStateCid = ndb.IntegerProperty(indexed=False)
     historyListCid = ndb.IntegerProperty(indexed=False)
 
@@ -54,7 +54,8 @@ class Delivery(ndb.Model):
     ticket = ndb.IntegerProperty(indexed=True)
     drops = ndb.IntegerProperty(indexed=False)
     comment = ndb.StringProperty(indexed=False)
-    date = ndb.IntegerProperty(indexed=False)
+    requestDate = ndb.IntegerProperty(indexed=False)
+    DeliveryDate = ndb.IntegerProperty(indexed=False)
 
 
 class MainPage(webapp2.RequestHandler):
@@ -85,7 +86,7 @@ class MainPage(webapp2.RequestHandler):
 
         # history
         self.response.write('<br><hr>History<br>')
-        deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(hydroidUnitId)).order(-Delivery.date)
+        deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(hydroidUnitId)).order(-Delivery.requsetDate)
         deliveryHistoryList = deliveryHistoryQuery.fetch(10)
 
         for delivery in deliveryHistoryList:
@@ -129,7 +130,7 @@ def FetchPendingRequestStatus():
     ticket = GetSingletonTicket()
     return {'ticket': ticket.ticket,
             'drops': ticket.drops,
-            'date': ticket.date,
+            'requestDate': ticket.requestDate,
             'comment': ticket.comment
            }
 
@@ -141,7 +142,7 @@ def SubmitSquirtRequest(jsonRequest):
         ticket.historyListCid += 1
     ticket.drops = int(jsonRequest['drops'])
     ticket.comment = jsonRequest['comment']
-    ticket.date = int(jsonRequest['date'])
+    ticket.requestDate = int(jsonRequest['requestDate'])
     ticket.pendingStateCid += 1
     ticket.put()
     return {}
@@ -151,7 +152,7 @@ def ConfirmSquirtDelivery(jsonRequest):
     ticket.ticket += 1
     ticket.drops = 0
     ticket.comment = ""
-    ticket.date = 0
+    ticket.requestDate = 0
     ticket.pendingStateCid += 1
     ticket.historyListCid += 1
     ticket.put()

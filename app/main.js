@@ -82,7 +82,7 @@ var squirtMain = (function () {
         $("#ticket-value").text(jsonResponse.ticket.toString());
         if (jsonResponse.drops > 0) {
             $("#drop-value").text(jsonResponse.drops.toString());
-            $("#datetime-value").text(moment(jsonResponse.date).format("hh:mm:ss a, MM/DD/YYYY"));
+            $("#datetime-value").text(moment(jsonResponse.requestDate).format("hh:mm:ss a, MM/DD/YYYY"));
             $("#comment-value").text(jsonResponse.comment);
         }
         else {
@@ -116,7 +116,7 @@ var squirtMain = (function () {
         return {
             drops: $("#drop-input").val(),
             comment: $("#comment-input").val(),
-            date: moment().valueOf().toString()
+            requestDate: moment().valueOf().toString()
         }
     }
 
