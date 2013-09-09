@@ -8,7 +8,9 @@
  */
 
 var squirtMain = (function () {
-    var UPDATE_INTERVAL = 1000;
+    const DateFormat = "hh:mm:ss a, MM/DD";
+    const UPDATE_INTERVAL = 1000;
+
     var pendingRequestDrops = 0;
     var remainingPollCount = 3;
 
@@ -110,8 +112,13 @@ var squirtMain = (function () {
 
         var randomImage = Math.floor(Math.random() * images);
         $.each(items, function(index, item) {
+            var imageFile = item.deliveryDate ? sprintf("green-leaf-%d.jpg", ++randomImage % images) : "no-water.png";
             var e = ['<li>'];
-            e.push(sprintf('<img src="images2/green-leaf-%d.jpg" hspace="3" vspace="3"/>', ++randomImage % images));
+            e.push(sprintf('<img src="images2/%s" hspace="6" vspace="6"/>', imageFile));
+            e.push(sprintf('<p style="font-size: 14px"><strong>ticket: %d,  drops: %d</strong></p>', item.ticket, item.drops));
+            e.push(sprintf('<p>request at: %s</p>', moment(item.requestDate).format(DateFormat)));
+            e.push(sprintf('<p>delivery at: %s</p>', item.deliveryDate ? moment(item.deliveryDate).format(DateFormat) : ''));
+            e.push(sprintf('<p>comment: %s</p>', item.comment));
             e.push('</li>');
 
             htmlItems.push(e.join(''));
@@ -171,7 +178,7 @@ var squirtMain = (function () {
             {
                 ticket: $("#ticket-value").text(),
                 deliveryDate: moment().valueOf().toString(),
-                note: "delivered"
+                deliveryNote: "simulated delivery"
             },
             null, null, onSimulateSquirtDeliveryDone));
     }

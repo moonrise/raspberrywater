@@ -53,12 +53,14 @@ class Ticket(ndb.Model):
 def GetDeliveryKey(key, hydroidUnitId=HYDROID_UNIT_ID):
     return ndb.Key(Delivery, key, parent=GetHydroidUnitKey(hydroidUnitId))
 
+
 class Delivery(ndb.Model):
     ticket = ndb.IntegerProperty(indexed=True)
     drops = ndb.IntegerProperty(indexed=False)
     comment = ndb.StringProperty(indexed=False)
     requestDate = ndb.IntegerProperty(indexed=False)
     deliveryDate = ndb.IntegerProperty(indexed=False)
+    deliveryNote = ndb.StringProperty(indexed=False)
 
 
 class MainPage(webapp2.RequestHandler):
@@ -143,7 +145,6 @@ def SubmitSquirtRequest(jsonRequest):
     # replace the pending request and move the old one to history
     if ticket.drops > 0:
         MoveToHistory(HYDROID_UNIT_ID)
-        ticket.ticket += 1
 
     # new request
     ticket.drops = int(jsonRequest['drops'])
@@ -154,7 +155,15 @@ def SubmitSquirtRequest(jsonRequest):
     return {}
 
 def ConfirmSquirtDelivery(jsonRequest):
-    deliveredTicket = jsonRequest.ticket
+    currentTicket = GetSingletonTicket()
+    deliveredTicket = int(jsonRequest['ticket'])
+
+    if (currentTicket.ticket == deliveredTicket):
+        delivered = MoveToHistory(HYDROID_UNIT_ID)
+        delivered.deliveryDate = long(jsonRequest['deliveryDate'])
+        delivered.deliveryNote = jsonRequest['deliveryNote']
+        delivered.put()
+
     return {}
 
 def GetDeliveryItemForTicket(ticket, hydroidUnitId):
@@ -188,20 +197,21 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
     ticket.historyListCid += 1
     ticket.put()
 
+    return delivery
+
 def FetchHistoryList():
     deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).order(-Delivery.ticket)
     deliveryHistoryList = deliveryHistoryQuery.fetch(10)
 
     historyList = []
-    count = 0
     for delivery in deliveryHistoryList:
-        count += 1
         historyList.append({
             'ticket': delivery.ticket,
             'drops': delivery.drops,
             'comment': delivery.comment,
             'requestDate': delivery.requestDate,
-            'deliveryDate': delivery.deliveryDate
+            'deliveryDate': delivery.deliveryDate,
+            'deliveryNote': delivery.deliveryNote
         })
 
     return {'length': historyList.__len__(),
