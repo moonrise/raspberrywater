@@ -84,7 +84,7 @@ var squirtMain = (function () {
         $("#ticket-value").text(jsonResponse.ticket.toString());
         if (jsonResponse.drops > 0) {
             $("#drop-value").text(jsonResponse.drops.toString());
-            $("#datetime-value").text(moment(jsonResponse.requestDate).format("hh:mm:ss a, MM/DD/YYYY"));
+            $("#datetime-value").text(moment(jsonResponse.requestDate).format(DateFormat));
             $("#comment-value").text(jsonResponse.comment);
         }
         else {
@@ -119,6 +119,7 @@ var squirtMain = (function () {
             e.push(sprintf('<p>request at: %s</p>', moment(item.requestDate).format(DateFormat)));
             e.push(sprintf('<p>delivery at: %s</p>', item.deliveryDate ? moment(item.deliveryDate).format(DateFormat) : ''));
             e.push(sprintf('<p>comment: %s</p>', item.comment));
+            e.push(sprintf('<p>note: %s</p>', item.deliveryNote));
             e.push('</li>');
 
             htmlItems.push(e.join(''));
