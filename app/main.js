@@ -119,7 +119,8 @@ var squirtMain = (function () {
             e.push(sprintf('<p>request at: %s</p>', moment(item.requestDate).format(DateFormat)));
             e.push(sprintf('<p>delivery at: %s</p>', item.deliveryDate ? moment(item.deliveryDate).format(DateFormat) : ''));
             e.push(sprintf('<p>comment: %s</p>', item.comment));
-            e.push(sprintf('<p>note: %s</p>', item.deliveryNote));
+//            e.push(sprintf('<p>note: %s</p>', item.deliveryNote));
+            e.push(sprintf('<p>blob key: %s</p>', item.imageBlobKey));
             e.push('</li>');
 
             htmlItems.push(e.join(''));

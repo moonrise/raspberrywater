@@ -3,6 +3,7 @@ import cgi
 import urllib
 import webapp2
 import json
+from google.appengine.api import images
 from google.appengine.ext import ndb
 from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import blobstore_handlers
@@ -152,6 +153,13 @@ class OnUpload(blobstore_handlers.BlobstoreUploadHandler):
             blobInfo.delete()
 
 
+class OnView(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, blobKey):
+        if not blobstore.get(blobKey):
+            self.error(404)
+        else:
+            self.send_blob(blobKey)
+
 def QueryChangeState():
     ticket = GetSingletonTicket()
     return {'pendingStateCid': ticket.pendingStateCid,
@@ -238,17 +246,19 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
 
 def FetchHistoryList():
     deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).order(-Delivery.ticket)
-    deliveryHistoryList = deliveryHistoryQuery.fetch(10)
+    deliveryHistoryList = deliveryHistoryQuery.fetch(1)
 
     historyList = []
     for delivery in deliveryHistoryList:
+        imageURL = images.get_serving_url(delivery.imageBlobKey) if delivery.imageBlobKey else None
         historyList.append({
             'ticket': delivery.ticket,
             'drops': delivery.drops,
             'comment': delivery.comment,
             'requestDate': delivery.requestDate,
             'deliveryDate': delivery.deliveryDate,
-            'deliveryNote': delivery.deliveryNote
+            'deliveryNote': delivery.deliveryNote,
+            'imageBlobKey': "k5" + imageURL
         })
 
     return {'length': historyList.__len__(),
@@ -265,4 +275,5 @@ main = webapp2.WSGIApplication([
     ('/app/main', MainPage),
     ('/app/jsonApi', JsonAPI),
     ('/app/upload', OnUpload),
+    ('/app/view', OnView),
 ], debug=True)
