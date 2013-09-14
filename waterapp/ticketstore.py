@@ -43,12 +43,13 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
     return singletonTicket
 
 class Ticket(ndb.Model):
-    ticket = ndb.IntegerProperty(indexed=False)
-    drops = ndb.IntegerProperty(indexed=False)
-    comment = ndb.StringProperty(indexed=False)
-    requestDate = ndb.IntegerProperty(indexed=False)
-    pendingStateCid = ndb.IntegerProperty(indexed=False)
-    historyListCid = ndb.IntegerProperty(indexed=False)
+    ticket = ndb.IntegerProperty()
+    drops = ndb.IntegerProperty()
+    comment = ndb.StringProperty()
+    requestDate = ndb.IntegerProperty()
+    pendingStateCid = ndb.IntegerProperty()
+    historyListCid = ndb.IntegerProperty()
+    image = ndb.BlobProperty()
 
 def GetDeliveryKey(key, hydroidUnitId=HYDROID_UNIT_ID):
     return ndb.Key(Delivery, key, parent=GetHydroidUnitKey(hydroidUnitId))
@@ -56,11 +57,11 @@ def GetDeliveryKey(key, hydroidUnitId=HYDROID_UNIT_ID):
 
 class Delivery(ndb.Model):
     ticket = ndb.IntegerProperty(indexed=True)
-    drops = ndb.IntegerProperty(indexed=False)
-    comment = ndb.StringProperty(indexed=False)
-    requestDate = ndb.IntegerProperty(indexed=False)
-    deliveryDate = ndb.IntegerProperty(indexed=False)
-    deliveryNote = ndb.StringProperty(indexed=False)
+    drops = ndb.IntegerProperty()
+    comment = ndb.StringProperty()
+    requestDate = ndb.IntegerProperty()
+    deliveryDate = ndb.IntegerProperty()
+    deliveryNote = ndb.StringProperty()
 
 
 class MainPage(webapp2.RequestHandler):
