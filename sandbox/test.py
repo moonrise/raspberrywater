@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from google.appengine.api import users
+from google.appengine.ext import blobstore
 import webapp2
 import cgi
 
@@ -27,6 +28,12 @@ class HelloHandler(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/html'
         self.response.write(HELLO_HTML)
 
+class UploadURL(webapp2.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'text/html'
+        uploadUrl = blobstore.create_upload_url('/upload')
+        self.response.write("upload url: %s" % cgi.escape(uploadUrl))
+
 class UserHandler(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
@@ -51,6 +58,10 @@ class GuestBook(webapp2.RequestHandler):
 hello = webapp2.WSGIApplication([
    ('/test/hello', HelloHandler),
 ], debug=True)
+
+upload = webapp2.WSGIApplication([
+   ('/test/upload', UploadURL),
+   ], debug=True)
 
 user = webapp2.WSGIApplication([
    ('/test/user', UserHandler),

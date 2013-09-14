@@ -18,6 +18,9 @@ handlers:
 - url: /test/hello
   script: sandbox.test.hello
 
+- url: /test/upload
+  script: sandbox.test.upload
+
 - url: /test/form.*
   script: sandbox.test.form
 
