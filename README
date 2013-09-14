@@ -1,1 +1,30 @@
-This file was created by IntelliJ IDEA 12.1.4 for binding GitHub repository
+
+===== main entry URL
+http://localhost:8080/ which runs main.py via app.yaml URL mapper
+
+
+===== the root
+* app.yaml - Google App Engine (GAE) meta/URL mapper
+* index.yaml - GAE indexer
+* main.py - python script that shows the menu entry (the Main Entry for the whole project)
+
+
+===== top level folders:
+* app
+this is more like "static" folder with html, javascripts, css, images, etc...
+
+* lib
+javascript library folder
+the idea was to hold all js libraries here, but it did not work out like that.
+the actual *.js, *.css stuff needed to be at the root of the static assets (the app folder).
+so it holds the big libraries as references including non runtime materials
+
+* sandbox
+the testing ground
+
+* templates
+html templates, but not being used at the moment
+
+* waterapp
+this is the main entry for the water app and the place for the python scripts (the server)
+all other assets are served from app folder (client really)
