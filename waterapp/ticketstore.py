@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 import cgi
 import urllib
-from google.appengine.ext import ndb
 import webapp2
 import json
+from google.appengine.ext import ndb
+from google.appengine.ext import blobstore
+from google.appengine.ext.webapp import blobstore_handlers
+
 
 MAIN_PAGE_FOOTER_TEMPLATE = """\
     <form action="/app/request?%s" method="post">
@@ -42,6 +45,11 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
         singletonTicket = GetSingletonTicketKey(hydroidUnitId).get() # get it right back
     return singletonTicket
 
+class UserPhoto(ndb.Model):
+    user = ndb.StringProperty()
+    #blob_key = blobstore.BlobReferenceProperty()
+    blob_key = ndb.BlobKeyProperty()
+
 class Ticket(ndb.Model):
     ticket = ndb.IntegerProperty()
     drops = ndb.IntegerProperty()
@@ -49,7 +57,7 @@ class Ticket(ndb.Model):
     requestDate = ndb.IntegerProperty()
     pendingStateCid = ndb.IntegerProperty()
     historyListCid = ndb.IntegerProperty()
-    image = ndb.BlobProperty()
+    imageBlobKey = ndb.BlobKeyProperty()
 
 def GetDeliveryKey(key, hydroidUnitId=HYDROID_UNIT_ID):
     return ndb.Key(Delivery, key, parent=GetHydroidUnitKey(hydroidUnitId))
@@ -62,6 +70,7 @@ class Delivery(ndb.Model):
     requestDate = ndb.IntegerProperty()
     deliveryDate = ndb.IntegerProperty()
     deliveryNote = ndb.StringProperty()
+    imageBlobKey = ndb.BlobKeyProperty()
 
 
 class MainPage(webapp2.RequestHandler):
@@ -123,14 +132,32 @@ class JsonAPI(webapp2.RequestHandler):
             self.response.write(json.dumps(ConfirmSquirtDelivery(jsonRequest)))
         elif command == "fetchHistoryList":
             self.response.write(json.dumps(FetchHistoryList()))
+        elif command == "procureUploadURL":
+            self.response.write(json.dumps(ProcureUploadURL()))
         else:
             self.response.write(json.dumps({'apierror':"%s is invalid command" % command}))
+
+
+class OnUpload(blobstore_handlers.BlobstoreUploadHandler):
+    def post(self):
+        ticketNo = int(self.request.headers['Ticket'])
+        blobInfo = self.get_uploads()[0]
+
+        # store the blob key
+        delivered = GetDeliveryItemForTicket(ticketNo, HYDROID_UNIT_ID)
+        if delivered:
+            delivered.imageBlobKey = blobInfo.key()
+            delivered.put()
+        else:
+            blobInfo.delete()
+
 
 def QueryChangeState():
     ticket = GetSingletonTicket()
     return {'pendingStateCid': ticket.pendingStateCid,
             'historyListCid': ticket.historyListCid,
            }
+
 
 def FetchPendingRequestStatus():
     ticket = GetSingletonTicket()
@@ -139,6 +166,7 @@ def FetchPendingRequestStatus():
             'requestDate': ticket.requestDate,
             'comment': ticket.comment
            }
+
 
 def SubmitSquirtRequest(jsonRequest):
     ticket = GetSingletonTicket()
@@ -154,6 +182,7 @@ def SubmitSquirtRequest(jsonRequest):
     ticket.pendingStateCid += 1
     ticket.put()
     return {}
+
 
 def ConfirmSquirtDelivery(jsonRequest):
     currentTicket = GetSingletonTicket()
@@ -171,6 +200,7 @@ def ConfirmSquirtDelivery(jsonRequest):
 
     return {}
 
+
 def GetDeliveryItemForTicket(ticket, hydroidUnitId):
     # target delivery - create one if not there
     deliveryKey = GetDeliveryKey(ticket, hydroidUnitId)
@@ -178,6 +208,7 @@ def GetDeliveryItemForTicket(ticket, hydroidUnitId):
     if not delivery:
         delivery = Delivery(key=deliveryKey)
     return delivery
+
 
 def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
     # source ticket
@@ -204,6 +235,7 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
 
     return delivery
 
+
 def FetchHistoryList():
     deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).order(-Delivery.ticket)
     deliveryHistoryList = deliveryHistoryQuery.fetch(10)
@@ -224,7 +256,13 @@ def FetchHistoryList():
             }
 
 
+def ProcureUploadURL():
+    uploadUrl = blobstore.create_upload_url('/app/upload')
+    return {'url':cgi.escape(uploadUrl)}
+
+
 main = webapp2.WSGIApplication([
     ('/app/main', MainPage),
     ('/app/jsonApi', JsonAPI),
+    ('/app/upload', OnUpload),
 ], debug=True)
