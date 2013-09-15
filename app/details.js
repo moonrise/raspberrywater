@@ -42,6 +42,15 @@ var squirtDetails = (function () {
         $("#details-request-note").text(item.comment);
         $("#details-delivery-time").text(squirtCommon.formatDate(item.deliveryDate));
         $("#details-delivery-note").text(item.deliveryNote);
+
+        // update image area
+        if (item.imageBlobURL) {
+            $("#details-image").attr('src', item.imageBlobURL);
+            $("#details-image").attr('alt', item.imageBlobURL);
+        }
+        else {
+            $("#details-image").attr('alt', "No photo is available");
+        }
     }
 
     //

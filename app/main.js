@@ -117,21 +117,31 @@ var squirtMain = (function () {
         $.each(items, function(index, item) {
             var imageFile = item.deliveryDate ? sprintf("green-leaf-%d.jpg", ++randomImage % images) : "no-water.png";
             var e = ['<li>'];
+//            e.push(sprintf('<p class="ui-li-aside">Note</p>'));
             e.push(sprintf('<a href="#" data-transition="flip" id=%d>', item.ticket));
             e.push(sprintf('<img src="images2/%s" hspace="6" vspace="6"/>', imageFile));
-            e.push(sprintf('<p style="font-size: 14px"><strong>ticket: %d,  drops: %d</strong></p>', item.ticket, item.drops));
-            e.push(sprintf('<p>request at: %s</p>', moment(item.requestDate).format(DateFormat)));
-            e.push(sprintf('<p>delivery at: %s</p>', item.deliveryDate ? moment(item.deliveryDate).format(DateFormat) : ''));
-            e.push(sprintf('<p>comment: %s</p>', item.comment));
-//            e.push(sprintf('<p>note: %s</p>', item.deliveryNote));
-//            e.push(sprintf('<p>blob key: %s</p>', item.imageBlobKey));
-//            e.push(sprintf('<p>blob url: %s</p>', item.imageBlobURL));
+            e.push(sprintf('<p style="font-size: 14px">ticket: <strong>%d</strong>, drops: %s</p>',
+                            item.ticket, getWaterDropImages(item.drops)));
+            e.push(sprintf('<p>%s <image src="images2/arrow-right.png" height=10/> %s</p>',
+                            squirtCommon.formatDateShort(item.requestDate), squirtCommon.formatDateShort(item.deliveryDate)));
+            e.push(sprintf('<p>request note: %s</p>', item.comment));
+            e.push(sprintf('<p>delivery note: %s</p>', item.deliveryNote));
             e.push('</a></li>');
 
             htmlItems.push(e.join(''));
         });
 
         return htmlItems.join('');
+    }
+
+    function getWaterDropImages(howManyDrops, size) {
+        var images = [];
+
+        for (var i=0; i<howManyDrops; i++) {
+            images.push("<img src='images2/water.png' height='13'/>");
+        }
+
+        return images.join('');
     }
 
     function updatePendingRequestStatusHeader() {

@@ -252,7 +252,7 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
 
 def FetchHistoryList():
     deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).order(-Delivery.ticket)
-    deliveryHistoryList = deliveryHistoryQuery.fetch(1)
+    deliveryHistoryList = deliveryHistoryQuery.fetch(10)
 
     historyList = []
     for delivery in deliveryHistoryList:
