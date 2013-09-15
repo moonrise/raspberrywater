@@ -46,10 +46,6 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
         singletonTicket = GetSingletonTicketKey(hydroidUnitId).get() # get it right back
     return singletonTicket
 
-class UserPhoto(ndb.Model):
-    user = ndb.StringProperty()
-    #blob_key = blobstore.BlobReferenceProperty()
-    blob_key = ndb.BlobKeyProperty()
 
 class Ticket(ndb.Model):
     ticket = ndb.IntegerProperty()
@@ -72,6 +68,12 @@ class Delivery(ndb.Model):
     deliveryDate = ndb.IntegerProperty()
     deliveryNote = ndb.StringProperty()
     imageBlobKey = ndb.BlobKeyProperty()
+
+
+def DirtyHistoryList():
+    ticket = GetSingletonTicket()
+    ticket.historyListCid += 1
+    ticket.put()
 
 
 class MainPage(webapp2.RequestHandler):
@@ -149,7 +151,7 @@ class OnUpload(blobstore_handlers.BlobstoreUploadHandler):
         if delivered:
             delivered.imageBlobKey = blobInfo.key()
             delivered.put()
-            GetSingletonTicket().historyListCid += 1
+            DirtyHistoryList()
         else:
             blobInfo.delete()
 
@@ -208,6 +210,7 @@ def ConfirmSquirtDelivery(jsonRequest):
         delivered.deliveryDate = long(jsonRequest['deliveryDate'])
         delivered.deliveryNote = jsonRequest['deliveryNote']
         delivered.put()
+        DirtyHistoryList();
 
     return {}
 
