@@ -125,7 +125,7 @@ var squirtMain = (function () {
             e.push(sprintf('<p>%s <image src="images2/arrow-right.png" height=10/> %s</p>',
                             squirtCommon.formatDateShort(item.requestDate), squirtCommon.formatDateShort(item.deliveryDate)));
             e.push(sprintf('<p>request note: %s</p>', item.comment));
-            e.push(sprintf('<p>delivery note: %s</p>', item.deliveryNote));
+            e.push(sprintf('<p>delivery note: %s</p>', squirtCommon.iconifyDeliveryNote(item.deliveryNote, 10)));
             e.push('</a></li>');
 
             htmlItems.push(e.join(''));

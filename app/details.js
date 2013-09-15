@@ -41,16 +41,26 @@ var squirtDetails = (function () {
         $("#details-request-time").text(squirtCommon.formatDate(item.requestDate));
         $("#details-request-note").text(item.comment);
         $("#details-delivery-time").text(squirtCommon.formatDate(item.deliveryDate));
-        $("#details-delivery-note").text(item.deliveryNote);
+        $("#details-delivery-note").html(squirtCommon.iconifyDeliveryNote(item.deliveryNote, 14));
 
         // update image area
-        if (item.imageBlobURL) {
-            $("#details-image").attr('src', item.imageBlobURL);
-            $("#details-image").attr('alt', item.imageBlobURL);
+        try {
+            if (item.imageBlobURL && !item.imageBlobURL.endsWith("None")) {
+                $("#details-image").attr('src', item.imageBlobURL);
+                $("#details-image").attr('alt', item.imageBlobURL);
+            }
+            else {
+                displayNoImageAvailable();
+            }
         }
-        else {
-            $("#details-image").attr('alt', "No photo is available");
+        catch (e) {
+            displayNoImageAvailable();
         }
+    }
+
+    function displayNoImageAvailable() {
+        $("#details-image").attr('src', "images2/not-available-128.png");
+        $("#details-image").attr('alt', "No photo is available");
     }
 
     //

@@ -32,7 +32,10 @@ var squirtCommon = (function () {
     }
 
     function formatDate(millisSinceEpoch) {
-        return moment(millisSinceEpoch).format(DateFormat);
+        if (millisSinceEpoch && millisSinceEpoch > 0) {
+            return moment(millisSinceEpoch).format(DateFormat);
+        }
+        return "";
     }
 
     function formatDateShort(millisSinceEpoch) {
@@ -42,7 +45,12 @@ var squirtCommon = (function () {
         return "";
     }
 
+    function getDefaultIconSize(size, defaultSize) {
+        return size === undefined ? defaultSize : size;
+    }
+
     function getWaterDropImages(howManyDrops, size) {
+        size = getDefaultIconSize(size, 16);
         var images = [];
 
         for (var i=0; i<howManyDrops; i++) {
@@ -52,6 +60,27 @@ var squirtCommon = (function () {
         return images.join('');
     }
 
+    function getOkImage(size) {
+        size = getDefaultIconSize(size, 16);
+        return sprintf("<img src='images2/ok.png' height='%d'/>", size);
+    }
+
+    function getQuestionImage(size) {
+        size = getDefaultIconSize(size, 16);
+        return sprintf("<img src='images2/question.png' height='%d'/>", size);
+    }
+
+    function iconifyDeliveryNote(deliverNote, size) {
+        if (deliverNote == null || deliverNote.length == 0) {
+            return getQuestionImage(size);
+        }
+
+        if (deliverNote.toLowerCase() == "ok") {
+            return getOkImage(size);
+        }
+
+        return sprintf("%s (%s", getQuestionImage(size), deliverNote);
+    }
 
     //
     // public API
@@ -65,6 +94,10 @@ var squirtCommon = (function () {
         buildJsonAPIRequest: buildJsonAPIRequest,
         fetchHistoryList: fetchHistoryList,
 
+        iconifyDeliveryNote: iconifyDeliveryNote,
+
+        getOKImage: getOkImage,
+        getQuestionImage: getQuestionImage,
         getWaterDropImages: getWaterDropImages
     }
 })();
