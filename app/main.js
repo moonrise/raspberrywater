@@ -121,6 +121,7 @@ var squirtMain = (function () {
             e.push(sprintf('<p>comment: %s</p>', item.comment));
 //            e.push(sprintf('<p>note: %s</p>', item.deliveryNote));
             e.push(sprintf('<p>blob key: %s</p>', item.imageBlobKey));
+            e.push(sprintf('<p>blob url: %s</p>', item.imageBlobURL));
             e.push('</li>');
 
             htmlItems.push(e.join(''));
