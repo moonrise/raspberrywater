@@ -86,7 +86,7 @@ var squirtMain = (function () {
 
         $("#ticket-value").text(jsonResponse.ticket.toString());
         if (jsonResponse.drops > 0) {
-            $("#drop-value").text(jsonResponse.drops.toString());
+            $("#drop-value").html(squirtCommon.getWaterDropImages(jsonResponse.drops, 14));
             $("#datetime-value").text(moment(jsonResponse.requestDate).format(DateFormat));
             $("#comment-value").text(jsonResponse.comment);
         }
@@ -117,11 +117,11 @@ var squirtMain = (function () {
         $.each(items, function(index, item) {
             var imageFile = item.deliveryDate ? sprintf("green-leaf-%d.jpg", ++randomImage % images) : "no-water.png";
             var e = ['<li>'];
-//            e.push(sprintf('<p class="ui-li-aside">Note</p>'));
+            //e.push(sprintf('<p class="ui-li-aside">Note</p>')); // not working well
             e.push(sprintf('<a href="#" data-transition="flip" id=%d>', item.ticket));
             e.push(sprintf('<img src="images2/%s" hspace="6" vspace="6"/>', imageFile));
             e.push(sprintf('<p style="font-size: 14px">ticket: <strong>%d</strong>, drops: %s</p>',
-                            item.ticket, getWaterDropImages(item.drops)));
+                            item.ticket, squirtCommon.getWaterDropImages(item.drops, 13)));
             e.push(sprintf('<p>%s <image src="images2/arrow-right.png" height=10/> %s</p>',
                             squirtCommon.formatDateShort(item.requestDate), squirtCommon.formatDateShort(item.deliveryDate)));
             e.push(sprintf('<p>request note: %s</p>', item.comment));
@@ -132,16 +132,6 @@ var squirtMain = (function () {
         });
 
         return htmlItems.join('');
-    }
-
-    function getWaterDropImages(howManyDrops, size) {
-        var images = [];
-
-        for (var i=0; i<howManyDrops; i++) {
-            images.push("<img src='images2/water.png' height='13'/>");
-        }
-
-        return images.join('');
     }
 
     function updatePendingRequestStatusHeader() {

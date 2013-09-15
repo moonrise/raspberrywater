@@ -36,8 +36,22 @@ var squirtCommon = (function () {
     }
 
     function formatDateShort(millisSinceEpoch) {
-        return moment(millisSinceEpoch).format(DateFormatShort);
+        if (millisSinceEpoch && millisSinceEpoch > 0) {
+            return moment(millisSinceEpoch).format(DateFormatShort);
+        }
+        return "";
     }
+
+    function getWaterDropImages(howManyDrops, size) {
+        var images = [];
+
+        for (var i=0; i<howManyDrops; i++) {
+            images.push(sprintf("<img src='images2/water.png' height='%d'/>", size));
+        }
+
+        return images.join('');
+    }
+
 
     //
     // public API
@@ -45,11 +59,12 @@ var squirtCommon = (function () {
     return {
         getDateFormat: function() { return DateFormat; },
         getDateFormatShort: function() { return DateFormatShort; },
-
         formatDate: formatDate,
         formatDateShort: formatDateShort,
 
         buildJsonAPIRequest: buildJsonAPIRequest,
-        fetchHistoryList: fetchHistoryList
+        fetchHistoryList: fetchHistoryList,
+
+        getWaterDropImages: getWaterDropImages
     }
 })();
