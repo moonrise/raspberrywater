@@ -8,8 +8,8 @@
     <option name="IS_MODULE_SDK" value="false" />
     <module name="raspberry" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-    <option name="launchJavascriptDebuger" value="false" />
-    <option name="browserUrl" value="" />
+    <option name="launchJavascriptDebuger" value="true" />
+    <option name="browserUrl" value="http://192.168.2.110:8080/s/index.html" />
     <option name="additionalOptions" value="--host 192.168.2.110" />
     <RunnerSettings RunnerId="PyDebugRunner" />
     <RunnerSettings RunnerId="Run" />
