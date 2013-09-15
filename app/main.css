@@ -31,15 +31,37 @@
 
 .section-line-item-bottom-bordered {
     border-bottom: 1px dashed rgba(0, 0, 0, 0.3);
-    /*border: 1px solid red;*/
     padding: 5px;
     margin: 2px;
+}
+
+#details-page .ui-collapsible div {
+    padding: 0px;
+}
+
+.section-line-item-compact {
+    padding: 5px;
+    margin: 0px;
+}
+
+.section-line-item-bottom-bordered-compact {
+    border-bottom: 1px dotted rgba(0, 0, 0, 0.2);
+    padding: 5px;
+    margin: 0px;
+}
+
+.section-line-item-compact div {
+    margin: 5px;
+}
+
+.section-line-item-bottom-bordered-compact div {
+    margin: 5px;
 }
 
 .section-line-header {
     display: inline-block;
     margin: 2px;
-    width: 90px;
+    width: 100px;
     font-size: 1em;
     font-style: oblique;
     color: rgba(0, 0, 0, 0.70);

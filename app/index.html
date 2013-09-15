@@ -30,18 +30,23 @@
 
     <link rel="stylesheet" href="main.css"/>
 
+    <script src="common.js"></script>
     <script src="main.js"></script>
+    <script src="details.js"></script>
+
     <script>
         $(document).ready(function() {
             squirtMain.appBootstrap();
         });
+
+        $(document).on("pageinit", "#details-page", squirtDetails.onDetailsPageInit);
     </script>
 </head>
 
 <body>
 
-<div data-role="page" data-theme="e">
-    <div data-role="header">
+<div data-role="page" id="main-page" data-theme="e">
+    <div data-role="header" data-theme="e">
         <h3>Hydroid</h3>
     </div>
 
