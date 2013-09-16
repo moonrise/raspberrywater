@@ -42,6 +42,8 @@ var squirtDetails = (function () {
         $("#details-request-note").text(item.comment);
         $("#details-delivery-time").text(squirtCommon.formatDate(item.deliveryDate));
         $("#details-delivery-note").html(squirtCommon.iconifyDeliveryNote(item.deliveryNote, 14));
+        $("#details-blob-key").text(item.imageBlobKey);
+        $("#details-blob-url").text(item.imageBlobURL);
 
         // update image area
         try {
