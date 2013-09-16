@@ -46,16 +46,11 @@ var squirtDetails = (function () {
         $("#details-blob-url").text(item.imageBlobURL);
 
         // update image area
-        try {
-            if (item.imageBlobURL && !item.imageBlobURL.endsWith("None")) {
-                $("#details-image").attr('src', item.imageBlobURL);
-                $("#details-image").attr('alt', item.imageBlobURL);
-            }
-            else {
-                displayNoImageAvailable();
-            }
+        if (item.imageBlobURL && !String(item.imageBlobURL).match(/None$/)) {
+            $("#details-image").attr('src', item.imageBlobURL);
+            $("#details-image").attr('alt', item.imageBlobURL);
         }
-        catch (e) {
+        else {
             displayNoImageAvailable();
         }
     }
