@@ -53,7 +53,7 @@ var squirtMain = (function () {
     }
 
     function updateRemoteState() {
-        $.ajax(buildJsonAPIRequest("queryChangeState", {},
+        $.ajax(squirtCommon.buildJsonAPIRequest("queryChangeState", {},
             onQueryChangeState,
             onQueryChangeStateNotOK,
             onQueryChangeStateDone));
@@ -63,7 +63,7 @@ var squirtMain = (function () {
         var pendingStateCid = jsonResponse.pendingStateCid;
         if (pendingStateCid != myPendingStateCid) {
             myPendingStateCid = pendingStateCid;
-            $.ajax(buildJsonAPIRequest("fetchPendingRequest", {}, onFetchPendingRequestStatusOK));
+            $.ajax(squirtCommon.buildJsonAPIRequest("fetchPendingRequest", {}, onFetchPendingRequestStatusOK));
         }
 
         var historyListCid = jsonResponse.historyListCid;
@@ -147,7 +147,7 @@ var squirtMain = (function () {
     }
 
     function onSquirtRequest() {
-        $.ajax(buildJsonAPIRequest("submitSquirtRequest",
+        $.ajax(squirtCommon.buildJsonAPIRequest("submitSquirtRequest",
             collectSquirtRequestParameters(),
             onSquirtRequestOK, onSquirtRequestNotOK, onSquirtRequestDone));
     }
@@ -178,7 +178,7 @@ var squirtMain = (function () {
 
     function onSimulateSquirtDelivery() {
         var isNoDrops = $("#drop-value").html() == "";
-        $.ajax(buildJsonAPIRequest("confirmSquirtDelivery",
+        $.ajax(squirtCommon.buildJsonAPIRequest("confirmSquirtDelivery",
             {
                 ticket: $("#ticket-value").text(),
                 deliveryDate: moment().valueOf().toString(),
@@ -190,21 +190,6 @@ var squirtMain = (function () {
     function onSimulateSquirtDeliveryDone(xhr, status) {
         updateRemoteState();
         activateTransientPolling();
-    }
-
-    function buildJsonAPIRequest(command, params, onOK, onNotOK, onDone) {
-        var payload = {command: command};
-        $.extend(payload, params);
-
-        return {
-            url: "/app/jsonApi",
-            type: "POST",
-            dataType: "json",
-            data: JSON.stringify(payload),
-            success: onOK,
-            error: onNotOK,
-            complete: onDone
-        };
     }
 
     function navigateToHistoryDetailView(event) {
