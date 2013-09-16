@@ -91,7 +91,7 @@ var squirtMain = (function () {
             $("#comment-value").text(jsonResponse.comment);
         }
         else {
-            $("#drop-value").text("");
+            $("#drop-value").html("");
             $("#datetime-value").text("");
             $("#comment-value").text("");
         }
@@ -177,15 +177,12 @@ var squirtMain = (function () {
     }
 
     function onSimulateSquirtDelivery() {
-        if ($("#drop-value").text() <= 0) {
-            return
-        }
-
+        var isNoDrops = $("#drop-value").html() == "";
         $.ajax(buildJsonAPIRequest("confirmSquirtDelivery",
             {
                 ticket: $("#ticket-value").text(),
                 deliveryDate: moment().valueOf().toString(),
-                deliveryNote: "simulated delivery"
+                deliveryNote: isNoDrops ? "empty simulated delivery" : "simulated delivery"
             },
             null, null, onSimulateSquirtDeliveryDone));
     }

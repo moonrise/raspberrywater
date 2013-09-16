@@ -37,7 +37,7 @@ var squirtDetails = (function () {
 
         // update detail area
         $("#details-ticket").text(item.ticket);
-        $("#details-drop").html(squirtCommon.getWaterDropImages(item.drops, 16));
+        $("#details-drop").html(squirtCommon.getWaterDropImages(item.drops, 14));
         $("#details-request-time").text(squirtCommon.formatDate(item.requestDate));
         $("#details-request-note").text(item.comment);
         $("#details-delivery-time").text(squirtCommon.formatDate(item.deliveryDate));

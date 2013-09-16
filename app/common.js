@@ -51,12 +51,17 @@ var squirtCommon = (function () {
 
     function getWaterDropImages(howManyDrops, size) {
         size = getDefaultIconSize(size, 16);
-        var images = [];
 
+        // nil icon
+        if (howManyDrops <= 0) {
+            return sprintf("<img src='images2/none.png' height='%d'/>", size);
+        }
+
+        // water drop icons in series
+        var images = [];
         for (var i=0; i<howManyDrops; i++) {
             images.push(sprintf("<img src='images2/water.png' height='%d'/>", size));
         }
-
         return images.join('');
     }
 
@@ -79,7 +84,7 @@ var squirtCommon = (function () {
             return getOkImage(size);
         }
 
-        return sprintf("%s (%s", getQuestionImage(size), deliverNote);
+        return sprintf("%s (%s)", getQuestionImage(size), deliverNote);
     }
 
     //

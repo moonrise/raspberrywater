@@ -198,13 +198,11 @@ def SubmitSquirtRequest(jsonRequest):
 
 
 def ConfirmSquirtDelivery(jsonRequest):
-    currentTicket = GetSingletonTicket()
-    deliveredTicket = int(jsonRequest['ticket'])
-
     # clear pending request - no matter what
     MoveToHistory(HYDROID_UNIT_ID)
 
     # update the one in history
+    deliveredTicket = int(jsonRequest['ticket'])
     delivered = GetDeliveryItemForTicket(deliveredTicket, HYDROID_UNIT_ID)
     if delivered:
         delivered.deliveryDate = long(jsonRequest['deliveryDate'])
