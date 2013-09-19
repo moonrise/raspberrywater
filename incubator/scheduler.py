@@ -4,7 +4,6 @@ import requests
 
 API_URL = 'http://192.168.2.110:8080/app/jsonApi'
 
-
 cronQueue = {}
 cronActive = {}
 cronFinished = {}
@@ -51,21 +50,29 @@ def pollServer():
 def handleServerJob(job):
     ticket = job['ticket']
     drops = job['drops']
-    queueJob(Job(ticket, 0, 0, 0, onUserTask))
+    queueJob(OneShotJob(ticket, onUserTask, drops, False, False))
     print "server job received for ticket %d with %d drops" % (ticket, drops)
 
 
 class Job:
     # parameters:
-    # - interval > 0 or 0 for one shot
-    # - startTime > 0
-    # - endTime > startTime or 0 for forever
-    def __init__(self, id, interval, startTime, endTime, callback):
+    # - id (int): job id (ticket id)
+    # - interval (int) > 0 or 0 for one shot
+    # - startTime (int) > 0
+    # - endTime (int) > startTime or 0 for forever
+    # - callback (fn): mandatory function ref with the signature (eventSequence, isLast, job)
+    # - drops (int): squirt count
+    # - photo (bool): take photo
+    # - vars (bool): variables of temperature and moisture
+    def __init__(self, id, interval, startTime, endTime, callback, drops, photo, vars):
         self.id = id
         self.interval = interval
         self.startTime = startTime
         self.endTime = endTime
         self.callback = callback
+        self.drops = drops
+        self.photo = photo
+        self.vars = vars
 
         # work variables
         self.lastEventTime = startTime - interval
@@ -95,9 +102,19 @@ class Job:
         delta = currentTime - (self.startTime + self.lastEventIndex * self.interval)
         isLast = (self.endTime > 0) and (currentTime + self.interval > self.endTime)
         self.callback(self.lastEventSequence, isLast, self)
-        #print "=== event fire ===> sid: %d, index: %d, seq: %d, delta: %d, isLast:%d" %\
-        #      (self.id, self.lastEventIndex, self.lastEventSequence, delta, isLast)
+        print "=== event fire ===> sid: %d, index: %d, seq: %d, delta: %d, isLast:%d" %\
+              (self.id, self.lastEventIndex, self.lastEventSequence, delta, isLast)
         return not isLast
+
+
+class SystemJob(Job):
+    def __init__(self, id, interval, callback):
+        Job.__init__(self, id, interval, getMilliSinceEpoch(), 0, callback, 0, 0, 0)
+
+
+class OneShotJob(Job):
+    def __init__(self, id, callback, drops, photo, vars):
+        Job.__init__(self, id, 0, 0, 0, callback, drops, photo, vars)
 
 
 def queueJob(job):
@@ -138,32 +155,53 @@ def doTimedLoop(resolution=100):
         spareTime = startTime + (tick + 1) * resolution - currentTime
         #print "tick: %d, spare: %d" % (tick, spareTime)
         if (spareTime > 5):
-            time.sleep(spareTime/1000.0)
+            time.sleep(spareTime / 1000.0)
 
         # for debug
-        if tick > 80:
+        if tick > 50:
             break
 
 
 def onRpiSystemTick(tick, isLast, job):
-    print "rpi tick: %d" % tick
+    #print "rpi tick: %d" % tick
     pass
+
 
 def onServerPoll(tick, isLast, job):
     pollServer()
 
+
 def onUserTask(tick, isLast, job):
-    print "user task ==> tick:%d, isLast:%d" % (tick, isLast)
+    print "user task ==> tick:%d, isLast:%d, drops:%d, photo:%s, vars:%s" % (tick, isLast, job.drops, job.photo, job.vars)
+    onSquirtDelivered(job)
     pass
+
+
+def onSquirtDelivered(job):
+    # send a quick confirm
+    fireJsonApi('confirmSquirtDelivery', {
+        'ticket': job.id,
+        'deliveryDate': getMilliSinceEpoch(),
+        'deliveryNote': 'OK'})
+    print "squirt delivery confirmation sent for ticket %d" % job.id
+
+    # send a slow photo confirm
+    if job.photo:
+        response = fireJsonApi('procureUploadURL', {})
+        if response:
+            fileName = 'test.jpg'
+            uploadURL = response['url']
+            print 'uplaod URL: %s' % uploadURL
+            r = requests.post(uploadURL, files={'file': open(fileName, 'rb')}, headers={'ticket': str(job.id)})
+            print 'image file %s uploaded' % fileName
 
 #
 # main
 #
 
-
 # permanent system jobs
-t = getMilliSinceEpoch()
-#addJob(Job(-1, 250, t, 0, onRpiSystemTick))
-addJob(Job(-2, 5000, t + 500, 0, onServerPoll))
+# addJob(SystemJob(-1, 250, onRpiSystemTick))
+addJob(SystemJob(-2, 5000, onServerPoll))
 
+# enter the app loop
 doTimedLoop()
