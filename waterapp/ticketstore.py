@@ -138,7 +138,7 @@ class JsonAPI(webapp2.RequestHandler):
         elif command == "procureUploadURL":
             self.response.write(json.dumps(ProcureUploadURL()))
         else:
-            self.response.write(json.dumps({'apierror':"%s is invalid command" % command}))
+            self.response.write(json.dumps({'apiError':"%s is invalid command" % command}))
 
 
 class OnUpload(blobstore_handlers.BlobstoreUploadHandler):

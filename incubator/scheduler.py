@@ -1,15 +1,65 @@
-import math
 import time
+import json
+import requests
+
+API_URL = 'http://192.168.2.110:8080/app/jsonApi'
+
 
 cronQueue = {}
 cronActive = {}
 cronFinished = {}
 
+
 def getMilliSinceEpoch():
     return int(time.time() * 1000)
 
-class Schedule:
-    # assumes interval > 0, startTime > 0, endTime > startTime or 0 (forever)
+
+def fireJsonApi(command, parameters):
+    headers = {'content-type': 'application/json'}
+
+    payload = {'command': command}
+    payload.update(parameters)
+
+    response = requests.post(API_URL, data=json.dumps(payload), headers=headers)
+
+    # check for communication error
+    if response.status_code != requests.codes.ok:
+        print('error: %d' % response.status_code)
+        print(response.text)
+        return None
+
+    # check for api error
+    if response.text.find('apiError') >= 0:
+        print(response.text)
+        return None
+
+    # return the valid api response in json format
+    #print(response.text)
+    #return response.json    # works in Rpi ?!!
+    return json.loads(response.text)    # works in elsewhere
+
+
+def pollServer():
+    try:
+        response = fireJsonApi('fetchPendingRequest', {})
+        if response:
+            handleServerJob(response)
+    except:
+        pass    # can't access the server? keep on trying forever - it may work again
+
+
+def handleServerJob(job):
+    ticket = job['ticket']
+    drops = job['drops']
+    queueJob(Job(ticket, 0, 0, 0, onUserTask))
+    print "server job received for ticket %d with %d drops" % (ticket, drops)
+
+
+class Job:
+    # parameters:
+    # - interval > 0 or 0 for one shot
+    # - startTime > 0
+    # - endTime > startTime or 0 for forever
     def __init__(self, id, interval, startTime, endTime, callback):
         self.id = id
         self.interval = interval
@@ -27,47 +77,93 @@ class Schedule:
 
     # returns false if it needs to be deactivated (i.e. no more callbacks!)
     def onTimerTick(self, currentTime):
-        currentTimeIndex = (currentTime - self.startTime) / self.interval
+        if self.interval == 0:  # one shot job
+            self.callback(0, True, self)
+            return
 
-        # we have served this period already; give small margin of starting earlier so that we don't fall behind
-        if currentTimeIndex == self.lastEventIndex and (currentTime - self.lastEventTime) < self.interval*0.99:
+        # multiple shots
+        currentTimeIndex = (currentTime - self.startTime) / self.interval
+        if currentTime < self.startTime + currentTimeIndex * self.interval - self.interval * 0.05:
             return True
 
-        # now we fire since we are in a new event index, but ensure events are not spaced
-        # too closely if we're falling behind. The fraction of the interval should be close
-        # to 1 so that we catch up eventually.
-        if currentTime > self.lastEventTime + self.interval * 0.85:
-            self.lastEventIndex = currentTimeIndex
-            self.lastEventSequence += 1
-            lag = currentTime - (self.startTime + self.lastEventIndex * self.interval)
-            elapsed = currentTime - self.lastEventTime
-            print "=== event fire ===> index: %d, seq: %d, lag: %d, duration: %d" %\
-                  (self.lastEventIndex, self.lastEventSequence, lag, elapsed)
-            self.lastEventTime = currentTime
-            #self.callback(self.lastEventSequence)   # fire the event
+        if self.lastEventIndex >= currentTimeIndex:
+            return True
 
-def doTimedLoop(s, resolution=100):
-    timeCounter = 0
+        # fire now
+        self.lastEventIndex = currentTimeIndex
+        self.lastEventSequence += 1
+        delta = currentTime - (self.startTime + self.lastEventIndex * self.interval)
+        isLast = (self.endTime > 0) and (currentTime + self.interval > self.endTime)
+        self.callback(self.lastEventSequence, isLast, self)
+        #print "=== event fire ===> sid: %d, index: %d, seq: %d, delta: %d, isLast:%d" %\
+        #      (self.id, self.lastEventIndex, self.lastEventSequence, delta, isLast)
+        return not isLast
+
+
+def queueJob(job):
+    cronQueue[job.id] = job
+
+
+def addJob(job):
+    cronActive[job.id] = job
+
+
+def removeJob(job):
+    cronFinished[job.id] = job
+    del cronActive[job.id]
+
+
+def doTimedLoop(resolution=100):
+    startTime = getMilliSinceEpoch()
     while True:
-        # mark the target time
-        timeCounter += 1
         currentTime = getMilliSinceEpoch()
-        targetTime = currentTime + resolution
+
+        # add queued jobs - queuing needed to avoid collection change while iterating
+        for q in cronQueue.itervalues():
+            addJob(q)
+        cronQueue.clear()
 
         # do some work
-        s.onTimerTick(currentTime)
+        finishedItems = []
+        for v in cronActive.itervalues():
+            if not v.onTimerTick(currentTime):
+                finishedItems.append(v)
+
+        # handle the finished items if any
+        for f in finishedItems:
+            removeJob(f)
 
         # sleep away for the remaining time if any
-        spareTime = targetTime - getMilliSinceEpoch()
-        print "time: %d, spare: %d" % (timeCounter, spareTime)
+        tick = (currentTime - startTime) / resolution
+        spareTime = startTime + (tick + 1) * resolution - currentTime
+        #print "tick: %d, spare: %d" % (tick, spareTime)
         if (spareTime > 5):
             time.sleep(spareTime/1000.0)
 
         # for debug
-        if timeCounter > 1000:
+        if tick > 80:
             break
 
-s0 = Schedule(101, 100, getMilliSinceEpoch(), 0, None)
-s0.dump()
-doTimedLoop(s0)
 
+def onRpiSystemTick(tick, isLast, job):
+    print "rpi tick: %d" % tick
+    pass
+
+def onServerPoll(tick, isLast, job):
+    pollServer()
+
+def onUserTask(tick, isLast, job):
+    print "user task ==> tick:%d, isLast:%d" % (tick, isLast)
+    pass
+
+#
+# main
+#
+
+
+# permanent system jobs
+t = getMilliSinceEpoch()
+#addJob(Job(-1, 250, t, 0, onRpiSystemTick))
+addJob(Job(-2, 5000, t + 500, 0, onServerPoll))
+
+doTimedLoop()
