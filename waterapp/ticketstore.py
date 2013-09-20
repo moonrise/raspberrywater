@@ -28,7 +28,7 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
         ticket = Ticket(key=GetSingletonTicketKey(hydroidUnitId))
         ticket.ticket = 1           # valid ticket starts from zero
         ticket.drops = 0
-        ticket.requestNote = 'no request'
+        ticket.requestNote = ''
         ticket.pendingStateCid = 0  # pending state change id
         ticket.historyListCid = 0   # history list change id
         ticket.put()
@@ -188,7 +188,7 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
     # clear up source (the pending data) with the ticket incremented
     ticket.ticket += 1
     ticket.drops = 0
-    ticket.requestNote = ""
+    ticket.requestNote = ''
     ticket.requestDate = 0
     ticket.pendingStateCid += 1
     ticket.historyListCid += 1

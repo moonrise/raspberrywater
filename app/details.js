@@ -39,7 +39,7 @@ var squirtDetails = (function () {
         $("#details-ticket").text(item.ticket);
         $("#details-drop").html(squirtCommon.getWaterDropImages(item.drops, 14));
         $("#details-request-time").text(squirtCommon.formatDate(item.requestDate));
-        $("#details-request-note").text(item.comment);
+        $("#details-request-note").text(item.requestNote);
         $("#details-delivery-time").text(squirtCommon.formatDate(item.deliveryDate));
         $("#details-delivery-note").html(squirtCommon.iconifyDeliveryNote(item.deliveryNote, 14));
 
