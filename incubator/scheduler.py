@@ -41,7 +41,7 @@ def fireJsonApi(command, parameters):
 def pollServer():
     try:
         response = fireJsonApi('fetchPendingRequest', {})
-        if response:
+        if response and response['requestDate'] > 0:
             handleServerJob(response)
     except:
         pass    # can't access the server? keep on trying forever - it may work again
