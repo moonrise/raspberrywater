@@ -9,28 +9,17 @@ from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import blobstore_handlers
 
 
-MAIN_PAGE_FOOTER_TEMPLATE = """\
-    <form action="/app/request?%s" method="post">
-      <div><textarea name="comment" rows="3" cols="60"></textarea></div>
-      <div><input type="submit" value="Request Water Squirt"></div>
-    </form>
-    <hr>
-    <form>Hydroid Unit ID:
-      <input value="%s" name="hydroid_unit_id">
-      <input type="submit" value="Use This Unit">
-    </form>
-  </body>
-</html>
-"""
-
 HYDROID_UNIT_ID = 'hydroid9'
+
 
 def GetHydroidUnitKey(hydroidUnitId=HYDROID_UNIT_ID):
     """Constructs a Datastore key for a hydroid unit instance id."""
     return ndb.Key('HydroidUnit', hydroidUnitId)
 
+
 def GetSingletonTicketKey(hydroidUnitId=HYDROID_UNIT_ID):
     return ndb.Key(Ticket, '1', parent=GetHydroidUnitKey(hydroidUnitId))
+
 
 def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
     # get the singleton ticket - returns a valid non-empty ticket always
@@ -39,7 +28,7 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
         ticket = Ticket(key=GetSingletonTicketKey(hydroidUnitId))
         ticket.ticket = 1           # valid ticket starts from zero
         ticket.drops = 0
-        ticket.comment = 'no request'
+        ticket.requestNote = 'no request'
         ticket.pendingStateCid = 0  # pending state change id
         ticket.historyListCid = 0   # history list change id
         ticket.put()
@@ -50,11 +39,12 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
 class Ticket(ndb.Model):
     ticket = ndb.IntegerProperty()
     drops = ndb.IntegerProperty()
-    comment = ndb.StringProperty()
+    requestNote = ndb.StringProperty()
     requestDate = ndb.IntegerProperty()
     pendingStateCid = ndb.IntegerProperty()
     historyListCid = ndb.IntegerProperty()
     imageBlobKey = ndb.BlobKeyProperty()
+
 
 def GetDeliveryKey(key, hydroidUnitId=HYDROID_UNIT_ID):
     return ndb.Key(Delivery, key, parent=GetHydroidUnitKey(hydroidUnitId))
@@ -63,7 +53,7 @@ def GetDeliveryKey(key, hydroidUnitId=HYDROID_UNIT_ID):
 class Delivery(ndb.Model):
     ticket = ndb.IntegerProperty(indexed=True)
     drops = ndb.IntegerProperty()
-    comment = ndb.StringProperty()
+    requestNote = ndb.StringProperty()
     requestDate = ndb.IntegerProperty()
     deliveryDate = ndb.IntegerProperty()
     deliveryNote = ndb.StringProperty()
@@ -74,47 +64,6 @@ def DirtyHistoryList():
     ticket = GetSingletonTicket()
     ticket.historyListCid += 1
     ticket.put()
-
-
-class MainPage(webapp2.RequestHandler):
-    def get(self):
-        self.response.write('<html><body>')
-
-        # get the current hydroid unit id
-        hydroidUnitId = self.request.get('hydroid_unit_id', HYDROID_UNIT_ID)
-
-        # get the singleton ticket
-        singletonTicket = GetSingletonTicketKey(hydroidUnitId).get()
-        if not singletonTicket:
-            ticket = Ticket(key=GetSingletonTicketKey(hydroidUnitId))
-            ticket.ticket = 1
-            ticket.drops = 0
-            ticket.comment = 'no request'
-            ticket.put()
-            singletonTicket = GetSingletonTicketKey(hydroidUnitId).get() # get it right back
-
-        # title
-        self.response.write('<br>Hydroid Unit: <b>%s</b><br>' % hydroidUnitId)
-
-        # current request stat
-        self.response.write('<br><hr>Current Request Queue<br>')
-        self.response.write('Ticket number: %d<br>' % singletonTicket.ticket)
-        self.response.write('Drop count: %d<br>' % singletonTicket.drops)
-        self.response.write('Comment: %s<br>' % singletonTicket.comment)
-
-        # history
-        self.response.write('<br><hr>History<br>')
-        deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(hydroidUnitId)).order(-Delivery.requestDate)
-        deliveryHistoryList = deliveryHistoryQuery.fetch(10)
-
-        for delivery in deliveryHistoryList:
-            if delivery.comment:
-                self.response.write('comment: %s' % cgi.escape(delivery.comment))
-
-        # request form
-        self.response.write('<br><hr>Make Request<br>')
-        sign_query_params = urllib.urlencode({'hydroid_unit_id': hydroidUnitId})
-        self.response.write(MAIN_PAGE_FOOTER_TEMPLATE % (sign_query_params, cgi.escape(hydroidUnitId)))
 
 
 class JsonAPI(webapp2.RequestHandler):
@@ -138,7 +87,7 @@ class JsonAPI(webapp2.RequestHandler):
         elif command == "procureUploadURL":
             self.response.write(json.dumps(ProcureUploadURL()))
         else:
-            self.response.write(json.dumps({'apiError':"%s is invalid command" % command}))
+            self.response.write(json.dumps({'apiError': "%s is invalid command" % command}))
 
 
 class OnUpload(blobstore_handlers.BlobstoreUploadHandler):
@@ -169,7 +118,7 @@ def QueryChangeState():
     ticket = GetSingletonTicket()
     return {'pendingStateCid': ticket.pendingStateCid,
             'historyListCid': ticket.historyListCid,
-           }
+    }
 
 
 def FetchPendingRequestStatus():
@@ -177,8 +126,8 @@ def FetchPendingRequestStatus():
     return {'ticket': ticket.ticket,
             'drops': ticket.drops,
             'requestDate': ticket.requestDate,
-            'comment': ticket.comment
-           }
+            'requestNote': ticket.requestNote
+    }
 
 
 def SubmitSquirtRequest(jsonRequest):
@@ -190,7 +139,7 @@ def SubmitSquirtRequest(jsonRequest):
 
     # new request
     ticket.drops = int(jsonRequest['drops'])
-    ticket.comment = jsonRequest['comment']
+    ticket.requestNote = jsonRequest['requestNote']
     ticket.requestDate = int(jsonRequest['requestDate'])
     ticket.pendingStateCid += 1
     ticket.put()
@@ -233,13 +182,13 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
     delivery.ticket = ticket.ticket
     delivery.drops = ticket.drops
     delivery.requestDate = ticket.requestDate
-    delivery.comment = ticket.comment
+    delivery.requestNote = ticket.requestNote
     delivery.put()
 
     # clear up source (the pending data) with the ticket incremented
     ticket.ticket += 1
     ticket.drops = 0
-    ticket.comment = ""
+    ticket.requestNote = ""
     ticket.requestDate = 0
     ticket.pendingStateCid += 1
     ticket.historyListCid += 1
@@ -257,7 +206,7 @@ def FetchHistoryList():
         historyList.append({
             'ticket': delivery.ticket,
             'drops': delivery.drops,
-            'comment': delivery.comment,
+            'requestNote': delivery.requestNote,
             'requestDate': delivery.requestDate,
             'deliveryDate': delivery.deliveryDate,
             'deliveryNote': delivery.deliveryNote,
@@ -267,17 +216,16 @@ def FetchHistoryList():
 
     return {'length': historyList.__len__(),
             'histories': historyList
-            }
+    }
 
 
 def ProcureUploadURL():
     uploadUrl = blobstore.create_upload_url('/app/upload')
-    return {'url':cgi.escape(uploadUrl)}
+    return {'url': cgi.escape(uploadUrl)}
 
 
 main = webapp2.WSGIApplication([
-    ('/app/main', MainPage),
-    ('/app/jsonApi', JsonAPI),
-    ('/app/upload', OnUpload),
-    ('/app/view/([^/]+)?', OnView),
-], debug=True)
+                                   ('/app/jsonApi', JsonAPI),
+                                   ('/app/upload', OnUpload),
+                                   ('/app/view/([^/]+)?', OnView),
+                               ], debug=True)

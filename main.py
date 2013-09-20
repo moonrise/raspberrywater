@@ -6,7 +6,6 @@ MAIN_HTML = """\
     <body>
         <br>
         <p><a href="/s/index.html"><b>Water Them</b></a></p>
-        <p><a href="/app/main"><b>Water Them (text version)</b></a></p>
         <br>
         <p>Test Menu (v1)</p>
         <p><a href="/test/hello">Hello</a></p>

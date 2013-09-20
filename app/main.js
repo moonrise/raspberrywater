@@ -88,12 +88,12 @@ var squirtMain = (function () {
         if (jsonResponse.drops > 0) {
             $("#drop-value").html(squirtCommon.getWaterDropImages(jsonResponse.drops, 14));
             $("#datetime-value").text(moment(jsonResponse.requestDate).format(DateFormat));
-            $("#comment-value").text(jsonResponse.comment);
+            $("#note-value").text(jsonResponse.requestNote);
         }
         else {
             $("#drop-value").html("");
             $("#datetime-value").text("");
-            $("#comment-value").text("");
+            $("#note-value").text("");
         }
     }
 
@@ -124,7 +124,7 @@ var squirtMain = (function () {
                             item.ticket, squirtCommon.getWaterDropImages(item.drops, 13)));
             e.push(sprintf('<p>%s <image src="images2/arrow-right.png" height=10/> %s</p>',
                             squirtCommon.formatDateShort(item.requestDate), squirtCommon.formatDateShort(item.deliveryDate)));
-            e.push(sprintf('<p>request note: %s</p>', item.comment));
+            e.push(sprintf('<p>request note: %s</p>', item.requestNote));
             e.push(sprintf('<p>delivery note: %s</p>', squirtCommon.iconifyDeliveryNote(item.deliveryNote, 10)));
             e.push('</a></li>');
 
@@ -155,7 +155,7 @@ var squirtMain = (function () {
     function collectSquirtRequestParameters() {
         return {
             drops: $("#drop-input").val(),
-            comment: $("#comment-input").val(),
+            requestNote: $("#note-input").val(),
             requestDate: moment().valueOf().toString()
         }
     }
