@@ -4,11 +4,15 @@
       <w>bjeong</w>
       <w>controlgroup</w>
       <w>custombox</w>
+      <w>datastore</w>
       <w>datebox</w>
       <w>durationbox</w>
+      <w>envread</w>
       <w>hrdstore</w>
       <w>hydroid</w>
       <w>intelli</w>
+      <w>isenvread</w>
+      <w>isphoto</w>
       <w>lightgray</w>
       <w>mili</w>
       <w>miliseconds</w>
