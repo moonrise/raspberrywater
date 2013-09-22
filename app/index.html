@@ -163,17 +163,17 @@
                 <div class="ui-block-a">
                     <div class="grid-cell ui-bar-e">
                         <p class="grid-cell-header">runs</p>
-                        <input id="frequency" type="range" min="1" max="100" value="1" data-mini="false"/>
+                        <input id="frequency" type="range" data-highlight="true" min="1" max="100" value="1"/>
                     </div>
                 </div>
                 <div class="ui-block-b">
                     <div class="grid-cell ui-bar-e">
                         <p class="grid-cell-header">interval</p>
                         <div class="ui-grid-a">
-                            <div class="ui-block-b">
+                            <div class="ui-block-a" style="width: 70%;">
                                 <input id="interval" type="range" min="1" max="100" value="1"/>
                             </div>
-                            <div class="ui-block-a">
+                            <div class="ui-block-b" style="width: 30%">
                                 <select id="interval-unit">
                                     <option value="1">day</option>
                                     <option value="2">hour</option>
@@ -189,7 +189,7 @@
                         <p class="grid-cell-header">start at</p>
                         <div class="ui-grid-b">
                             <div class="ui-block-a">
-                                <button data-mini="false">Now</button>
+                                <a data-role="button">Now</a>
                             </div>
                             <div class="ui-block-b">
                                 <input id="start-date" type="date" data-role="datebox" data-options='{"mode":"datebox"}' style="z-index: 1000"/>
@@ -202,13 +202,14 @@
                 </div>
             </div>
 
-            <div class="horizontal-div">
-                <p class="horizontal">note:</p>
-                <input class="horizontal" type="text" id="note-input" data-theme="b" value="" data-role="none">
-                <a class="horizontal" id="request-squirt-button" data-role="button" data-mini="true"
-                   data-icon="gear" data-iconpos="right" data-theme="b"
-                   style="display: inline-block">Submit</a>
+            <div data-role="fieldcontain">
+                <label label for="note-input">note:</label>
+                <input type="text" id="note-input" data-theme="b" value="">
             </div>
+
+            <a class="horizontal" id="request-squirt-button" data-role="button" data-mini="true"
+               data-icon="gear" data-iconpos="right" data-theme="b"
+               style="display: inline-block">Submit</a>
         </div>
 
         <div id="history-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"

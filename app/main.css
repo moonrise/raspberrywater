@@ -76,28 +76,20 @@
 }
 
 .grid-cell {
-    /*border: none;*/
-    /*border-color: darkcyan;*/
+    /*border: solid;*/
+    /*border-color: red;*/
     /*border-width: 1px;*/
-    position: relative;
     margin: 0px;
     padding: 10px;
-    overflow: hidden;
-    display: block-inline;
     height: 80px;
-    clear:both;
 }
 
 .grid-cell-header {
-    border: none;
-    border-color: darkcyan;
-    border-width: 1px;
-    position: relative;
+    /*border: solid;*/
+    /*border-color: darkcyan;*/
+    /*border-width: 1px;*/
     margin: 0px;
     padding: 0px;
-    overflow: hidden;
-    display: block-inline;
-    clear:both;
     font-weight: normal;
 }
 
@@ -110,7 +102,7 @@
     padding: 0px;
     overflow: hidden;
     /*float: left;*/
-    /*display: block-inline;*/
+    display: block-inline;
     /*clear:both;*/
 }
 
