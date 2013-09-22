@@ -11,7 +11,7 @@ var squirtMain = (function () {
     const DateFormat = "hh:mm:ss a, MM/DD";
     const UPDATE_INTERVAL = 1000;
 
-    var pendingRequestDrops = 0;
+    var isRequestPending = false;
     var remainingPollCount = 3;
 
     var myPendingStateCid = -1;
@@ -170,18 +170,17 @@ var squirtMain = (function () {
     }
 
     function onFetchPendingRequestStatusOK(jsonResponse) {
-        pendingRequestDrops = jsonResponse.drops;
 
-        $("#ticket-value").text(jsonResponse.ticket.toString());
-        if (jsonResponse.drops > 0) {
-            $("#drop-value").html(squirtCommon.getWaterDropImages(jsonResponse.drops, 14));
-            $("#datetime-value").text(squirtCommon.formatDate(jsonResponse.requestDate));
-            $("#note-value").text(jsonResponse.requestNote);
+        $("#request-items").html(squirtCommon.formatRequestItemsHtml(jsonResponse, 14));
+        if (jsonResponse.requestDate > 0) {
+            isRequestPending = true;
+            $("#request-time").text(squirtCommon.formatDate(jsonResponse.requestDate));
+            $("#request-note").text(jsonResponse.requestNote);
         }
         else {
-            $("#drop-value").html("");
-            $("#datetime-value").text("");
-            $("#note-value").text("");
+            isRequestPending = false;
+            $("#request-time").text("");
+            $("#request-note").text("");
         }
     }
 
@@ -208,8 +207,8 @@ var squirtMain = (function () {
             //e.push(sprintf('<p class="ui-li-aside">Note</p>')); // not working well
             e.push(sprintf('<a href="#" data-transition="flip" id=%d>', item.ticket));
             e.push(sprintf('<img src="images2/%s" hspace="6" vspace="6"/>', imageFile));
-            e.push(sprintf('<p style="font-size: 14px">ticket: <strong>%d</strong>, drops: %s</p>',
-                            item.ticket, squirtCommon.getWaterDropImages(item.drops, 13)));
+            e.push(sprintf('<p style="font-size: 12px">request <strong>%d</strong>:  %s</p>',
+                            item.ticket, squirtCommon.formatRequestItemsImage(item, 13)));
             e.push(sprintf('<p>%s <image src="images2/arrow-right.png" height=10/> %s</p>',
                             squirtCommon.formatDateShort(item.requestDate), squirtCommon.formatDateShort(item.deliveryDate)));
             e.push(sprintf('<p>request note: %s</p>', item.requestNote));
@@ -223,7 +222,7 @@ var squirtMain = (function () {
     }
 
     function updatePendingRequestStatusHeader() {
-        var header = pendingRequestDrops > 0 ? "pending request" : "no pending request";
+        var header = isRequestPending ? "pending request" : "no pending request";
 
         if (remainingPollCount > 0) {
             var formatter = "%s <span style='font-weight: lighter; color: #7de0c2'><i> - poll count %d</i></span>";
@@ -242,7 +241,13 @@ var squirtMain = (function () {
 
     function collectSquirtRequestParameters() {
         return {
-            drops: $("#drop-input").val(),
+            drops: ds.drops.getValue(),
+            photo: ds.photo.getStringValue(),
+            envread: ds.envread.getStringValue(),
+            runs: ds.runs.getValue(),
+            interval: ds.interval.getValue(),
+            intervalUnit: ds.interval.getUnit(),
+            start: ds.start.getTime(),
             requestNote: $("#note-input").val(),
             requestDate: squirtCommon.getMilliSinceEpoch().toString()
         }
@@ -265,12 +270,11 @@ var squirtMain = (function () {
     }
 
     function onSimulateSquirtDelivery() {
-        var isNoDrops = $("#drop-value").html() == "";
         $.ajax(squirtCommon.buildJsonAPIRequest("confirmSquirtDelivery",
             {
-                ticket: $("#ticket-value").text(),
+                ticket: parseInt($("#request-items").text()),   // get the first numeric digits only
                 deliveryDate: squirtCommon.getMilliSinceEpoch().toString(),
-                deliveryNote: isNoDrops ? "empty simulated delivery" : "simulated delivery"
+                deliveryNote: isRequestPending ? "empty simulated delivery" : "simulated delivery"
             },
             null, null, onSimulateSquirtDeliveryDone));
     }

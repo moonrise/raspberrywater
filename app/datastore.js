@@ -146,6 +146,10 @@ var ds = (function() {
                 return sprintf(titleFormatter, currentValue, getUnitLabel(currentValue, currentUnit));
             },
 
+            getValue: function() {
+                return currentValue;
+            },
+
             setValue: function(value) {
                 currentValue = value;
             },

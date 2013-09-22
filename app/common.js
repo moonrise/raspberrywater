@@ -58,7 +58,7 @@ var squirtCommon = (function () {
 
         // nil icon
         if (howManyDrops <= 0) {
-            return sprintf("<img src='images2/none.png' height='%d'/>", size);
+            return "";
         }
 
         // water drop icons in series
@@ -79,6 +79,21 @@ var squirtCommon = (function () {
         return sprintf("<img src='images2/question.png' height='%d'/>", size);
     }
 
+    function getNilImage(size) {
+        size = getDefaultIconSize(size, 16);
+        return sprintf("<img src='images2/none.png' height='%d'/>", size);
+    }
+
+    function getCameraImage(size) {
+        size = getDefaultIconSize(size, 16);
+        return sprintf("<img src='images2/camera.png' height='%d'/>", size);
+    }
+
+    function getGaugeImage(size) {
+        size = getDefaultIconSize(size, 16);
+        return sprintf("<img src='images2/gauge.png' height='%d'/>", size);
+    }
+
     function iconifyDeliveryNote(deliverNote, size) {
         if (deliverNote == null || deliverNote.length == 0) {
             return getQuestionImage(size);
@@ -89,6 +104,26 @@ var squirtCommon = (function () {
         }
 
         return sprintf("%s (%s)", getQuestionImage(size), deliverNote);
+    }
+
+    function formatRequestItemsHtml(json, size) {
+        return sprintf("%d.&nbsp;&nbsp;", json.ticket) + formatRequestItemsImage(json, size);
+    }
+
+    function formatRequestItemsImage(json, size) {
+        var items = [];
+
+        if (json.drops > 0) {
+            items.push(squirtCommon.getWaterDropImages(json.drops, size));
+        }
+        if (json.photo == "1") {
+            items.push(squirtCommon.getCameraImage(size));
+        }
+        if (json.envread == "1") {
+            items.push(squirtCommon.getGaugeImage(size));
+        }
+
+        return items.length == 0 ? squirtCommon.getNilImage(size) : items.join('&nbsp;');
     }
 
     //
@@ -104,10 +139,15 @@ var squirtCommon = (function () {
         buildJsonAPIRequest: buildJsonAPIRequest,
         fetchHistoryList: fetchHistoryList,
 
+        formatRequestItemsHtml: formatRequestItemsHtml,
+        formatRequestItemsImage: formatRequestItemsImage,
         iconifyDeliveryNote: iconifyDeliveryNote,
 
         getOKImage: getOkImage,
         getQuestionImage: getQuestionImage,
-        getWaterDropImages: getWaterDropImages
+        getWaterDropImages: getWaterDropImages,
+        getNilImage: getNilImage,
+        getCameraImage: getCameraImage,
+        getGaugeImage: getGaugeImage
     }
 })();

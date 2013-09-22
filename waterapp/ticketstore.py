@@ -28,6 +28,12 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
         ticket = Ticket(key=GetSingletonTicketKey(hydroidUnitId))
         ticket.ticket = 1           # valid ticket starts from zero
         ticket.drops = 0
+        ticket.photo = "0"
+        ticket.envread = "0"
+        ticket.runs = 0
+        ticket.interval = 0
+        ticket.intervalUnit = "d"
+        ticket.start = 1
         ticket.requestNote = ''
         ticket.pendingStateCid = 0  # pending state change id
         ticket.historyListCid = 0   # history list change id
@@ -39,6 +45,12 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
 class Ticket(ndb.Model):
     ticket = ndb.IntegerProperty()
     drops = ndb.IntegerProperty()
+    photo = ndb.StringProperty()
+    envread = ndb.StringProperty()
+    runs = ndb.IntegerProperty()
+    interval = ndb.IntegerProperty()
+    intervalUnit = ndb.StringProperty()
+    start = ndb.IntegerProperty()
     requestNote = ndb.StringProperty()
     requestDate = ndb.IntegerProperty()
     pendingStateCid = ndb.IntegerProperty()
@@ -53,6 +65,12 @@ def GetDeliveryKey(key, hydroidUnitId=HYDROID_UNIT_ID):
 class Delivery(ndb.Model):
     ticket = ndb.IntegerProperty(indexed=True)
     drops = ndb.IntegerProperty()
+    photo = ndb.StringProperty()
+    envread = ndb.StringProperty()
+    runs = ndb.IntegerProperty()
+    interval = ndb.IntegerProperty()
+    intervalUnit = ndb.StringProperty()
+    start = ndb.IntegerProperty()
     requestNote = ndb.StringProperty()
     requestDate = ndb.IntegerProperty()
     deliveryDate = ndb.IntegerProperty()
@@ -125,6 +143,12 @@ def FetchPendingRequestStatus():
     ticket = GetSingletonTicket()
     return {'ticket': ticket.ticket,
             'drops': ticket.drops,
+            'photo': ticket.photo,
+            'envread': ticket.envread,
+            'runs': ticket.runs,
+            'interval': ticket.interval,
+            'intervalUnit': ticket.intervalUnit,
+            'start': ticket.start,
             'requestDate': ticket.requestDate,
             'requestNote': ticket.requestNote
     }
@@ -134,11 +158,16 @@ def SubmitSquirtRequest(jsonRequest):
     ticket = GetSingletonTicket()
 
     # replace the pending request and move the old one to history
-    if ticket.drops > 0:
-        MoveToHistory(HYDROID_UNIT_ID)
+    MoveToHistory(HYDROID_UNIT_ID)
 
     # new request
     ticket.drops = int(jsonRequest['drops'])
+    ticket.photo = jsonRequest['photo']
+    ticket.envread = jsonRequest['envread']
+    ticket.runs = int(jsonRequest['runs'])
+    ticket.interval = int(jsonRequest['interval'])
+    ticket.intervalUnit = jsonRequest['intervalUnit']
+    ticket.start = int(jsonRequest['start'])
     ticket.requestNote = jsonRequest['requestNote']
     ticket.requestDate = int(jsonRequest['requestDate'])
     ticket.pendingStateCid += 1
@@ -181,6 +210,12 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
     # copy from source to target
     delivery.ticket = ticket.ticket
     delivery.drops = ticket.drops
+    delivery.photo = ticket.photo
+    delivery.envread = ticket.envread
+    delivery.runs = ticket.runs
+    delivery.interval = ticket.interval
+    delivery.intervalUnit = ticket.intervalUnit
+    delivery.start = ticket.start
     delivery.requestDate = ticket.requestDate
     delivery.requestNote = ticket.requestNote
     delivery.put()
@@ -188,6 +223,12 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
     # clear up source (the pending data) with the ticket incremented
     ticket.ticket += 1
     ticket.drops = 0
+    ticket.photo = '0'
+    ticket.envread = '0'
+    ticket.runs = 0
+    ticket.interval = 0
+    ticket.intervalUnit = 'd'
+    ticket.start = -1
     ticket.requestNote = ''
     ticket.requestDate = 0
     ticket.pendingStateCid += 1
@@ -206,6 +247,12 @@ def FetchHistoryList():
         historyList.append({
             'ticket': delivery.ticket,
             'drops': delivery.drops,
+            'photo': delivery.photo,
+            'envread': delivery.envread,
+            'runs': delivery.runs,
+            'interval': delivery.interval,
+            'intervalUnit': delivery.intervalUnit,
+            'start': delivery.start,
             'requestNote': delivery.requestNote,
             'requestDate': delivery.requestDate,
             'deliveryDate': delivery.deliveryDate,
