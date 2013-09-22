@@ -112,6 +112,17 @@ var squirtMain = (function () {
             ds.interval.setUnit(event.target.value);
             $("#interval-header .ui-btn-text").html(ds.interval.getTitleHtml());
         });
+
+
+        //
+        // start time
+        //
+        $("#start-header .ui-btn-text").html(ds.start.getTitleHtml());
+
+        $("#start-select input[type='radio']").on('change', function(event) {
+            ds.start.setNow(event.target.value);
+            $("#start-header .ui-btn-text").html(ds.start.getTitleHtml());
+        });
     }
 
     function updateRemoteStateRepeatedly() {
@@ -164,7 +175,7 @@ var squirtMain = (function () {
         $("#ticket-value").text(jsonResponse.ticket.toString());
         if (jsonResponse.drops > 0) {
             $("#drop-value").html(squirtCommon.getWaterDropImages(jsonResponse.drops, 14));
-            $("#datetime-value").text(moment(jsonResponse.requestDate).format(DateFormat));
+            $("#datetime-value").text(squirtCommon.formatDate(jsonResponse.requestDate));
             $("#note-value").text(jsonResponse.requestNote);
         }
         else {
@@ -233,7 +244,7 @@ var squirtMain = (function () {
         return {
             drops: $("#drop-input").val(),
             requestNote: $("#note-input").val(),
-            requestDate: moment().valueOf().toString()
+            requestDate: squirtCommon.getMilliSinceEpoch().toString()
         }
     }
 
@@ -258,7 +269,7 @@ var squirtMain = (function () {
         $.ajax(squirtCommon.buildJsonAPIRequest("confirmSquirtDelivery",
             {
                 ticket: $("#ticket-value").text(),
-                deliveryDate: moment().valueOf().toString(),
+                deliveryDate: squirtCommon.getMilliSinceEpoch().toString(),
                 deliveryNote: isNoDrops ? "empty simulated delivery" : "simulated delivery"
             },
             null, null, onSimulateSquirtDeliveryDone));

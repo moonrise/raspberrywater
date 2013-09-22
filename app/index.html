@@ -160,17 +160,17 @@
                 <div data-role="collapsible">
                     <h5 id="start-header">starting</h5>
                     <fieldset id="start-select" data-role="controlgroup" data-type="horizontal" data-mini="true">
-                        <input type="radio" id="start-now" name="start" value="0" checked="checked">
+                        <input type="radio" id="start-now" name="start" value="1" checked="checked">
                         <label for="start-now">immediately</label>
-                        <input type="radio" id="start-at" name="start" value="1">
+                        <input type="radio" id="start-at" name="start" value="0">
                         <label for="start-at">later at</label>
                     </fieldset>
                     <div class="ui-grid-a">
                         <div class="ui-block-a">
-                            <input id="start-date" type="date" data-role="datebox" data-options='{"mode":"datebox"}' style="z-index: 1000"/>
+                            <input id="start-time" type="date" data-role="datebox" data-options='{"mode":"timebox"}'/>
                         </div>
                         <div class="ui-block-b">
-                            <input id="start-time" type="date" data-role="datebox" data-options='{"mode":"timebox"}'/>
+                            <input id="start-date" type="date" data-role="datebox" data-options='{"mode":"datebox"}' style="z-index: 1000"/>
                         </div>
                     </div>
                 </div>

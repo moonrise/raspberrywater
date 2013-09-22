@@ -161,6 +161,43 @@ var ds = (function() {
     })();
 
 
+    var start = (function() {
+        const defaultNowValue = true;
+        const titleFormatter = "starting%s<span style='font-weight: bold; color: blue'><i>%s</i></span>";
+
+        var currentNowValue = defaultNowValue;
+        var time = squirtCommon.getMilliSinceEpoch() + 60*60*1000;  // one hour later by default
+        time = squirtCommon.getMilliSinceEpoch() + 30*1000;  // shorter delay for debug
+        var dateString = 0;
+        var timeString = 0;
+
+        function getLabel() {
+            if (currentNowValue == true) {
+                return sprintf(titleFormatter, " ", "immediately");
+            }
+            else {
+                return sprintf(titleFormatter, " on ", squirtCommon.formatDate(time));
+            }
+        }
+
+        return {
+            getTitleHtml: getLabel,
+
+            getTime: function() {   // -1 ==> immediately
+                return currentNowValue ? -1 : time;
+            },
+
+            setNow: function(value) {
+                currentNowValue = value != "0";
+            },
+
+            setDateString: function(value) {
+                dateString = value;
+            }
+        }
+    })();
+
+
     //
     // public api
     //
@@ -169,6 +206,7 @@ var ds = (function() {
         photo: photo,
         envread: envread,
         runs: runs,
-        interval: interval
+        interval: interval,
+        start: start
     }
 })();

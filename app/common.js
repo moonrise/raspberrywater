@@ -31,6 +31,10 @@ var squirtCommon = (function () {
         $.ajax(buildJsonAPIRequest("fetchHistoryList", {}, onOK, onNotOK, onDone));
     }
 
+    function getMilliSinceEpoch() {
+        return moment().valueOf();
+    }
+
     function formatDate(millisSinceEpoch) {
         if (millisSinceEpoch && millisSinceEpoch > 0) {
             return moment(millisSinceEpoch).format(DateFormat);
@@ -95,6 +99,7 @@ var squirtCommon = (function () {
         getDateFormatShort: function() { return DateFormatShort; },
         formatDate: formatDate,
         formatDateShort: formatDateShort,
+        getMilliSinceEpoch: getMilliSinceEpoch,
 
         buildJsonAPIRequest: buildJsonAPIRequest,
         fetchHistoryList: fetchHistoryList,
