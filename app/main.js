@@ -40,7 +40,30 @@ var squirtMain = (function () {
     }
 
     function initRequestParameters() {
+        //
+        // drops
+        //
+        $("#drops-header .ui-btn-text").html(ds.drops.getTitleHtml());
+
+        $("#drop-input").on('change', function(event) {
+            ds.drops.setValue(event.target.value);
+            $("#drops-header .ui-btn-text").html(ds.drops.getTitleHtml());
+        });
+
+
+        //
+        // runs
+        //
+        $("#runs-header .ui-btn-text").html(ds.runs.getTitleHtml());
+
+        $("#runs").on('change', function(event) {
+            ds.runs.setValue(event.target.value);
+            $("#runs-header .ui-btn-text").html(ds.runs.getTitleHtml());
+        });
+
+        //
         // interval
+        //
         $("#interval-header .ui-btn-text").html(ds.interval.getTitleHtml());
 
         // sync with the data and ui

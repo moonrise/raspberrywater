@@ -8,6 +8,64 @@
 
 // ds is the name space
 var ds = (function() {
+        var drops = (function() {
+        const defaultValue = 1;
+        const titleFormatter = "how many drops: <span style='font-weight: bold; color: blue'><i>%s</i></span>";
+
+        var currentValue = 1;
+
+        function getLabel(value) {
+            if (value == 0) {
+                return "none";
+            }
+            return sprintf("%d", value);
+        }
+
+        return {
+            getTitleHtml: function() {
+                return sprintf(titleFormatter, getLabel(currentValue));
+            },
+
+            setValue: function(value) {
+                currentValue = value;
+            },
+
+            getValue: function() {
+                return currentValue;
+            }
+        }
+    })();
+
+
+    var runs = (function() {
+        const defaultValue = 1;
+        const titleFormatter = "run <span style='font-weight: bold; color: blue'><i>%s</i></span>";
+
+        var currentValue = 1;
+
+        function getLabel(value) {
+            if (value == 1) {
+                return "once";
+            }
+            return sprintf("%d times", value);
+        }
+
+        return {
+            getTitleHtml: function() {
+                return sprintf(titleFormatter, getLabel(currentValue));
+            },
+
+            setValue: function(value) {
+                currentValue = value;
+            },
+
+            getValue: function() {
+                return currentValue;
+            }
+        }
+    })();
+
+
     var interval = (function() {
         // unit values are s, m, h, d for second, minute, hour and day
         const defaultValue = 1;
@@ -50,10 +108,13 @@ var ds = (function() {
         }
     })();
 
+
     //
     // public api
     //
     return {
+        drops: drops,
+        runs: runs,
         interval: interval
     }
 })();

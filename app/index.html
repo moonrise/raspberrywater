@@ -121,7 +121,7 @@
                 data-inset="false" data-expanded-icon="arrow-d" data-collapsed-icon="arrow-r"
                 style="margin: 0px;padding: 0px">
                 <div data-role="collapsible">
-                    <h5>how many drops</h5>
+                    <h5 id="drops-header">how many drops</h5>
                     <input id="drop-input" type="range" value="1" min="0" max="5"
                            data-mini="false" data-highlight="true" data-theme="e" data-track-theme="e">
                 </div>
@@ -140,8 +140,8 @@
                     </select>
                 </div>
                 <div data-role="collapsible">
-                    <h5>run N times</h5>
-                    <input id="frequency" type="range" data-highlight="true" min="1" max="100" value="1"/>
+                    <h5 id="runs-header">run N times</h5>
+                    <input id="runs" type="range" data-highlight="true" min="1" max="100" value="1"/>
                 </div>
                 <div data-role="collapsible">
                     <h5 id="interval-header">with the interval of</h5>
