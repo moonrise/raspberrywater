@@ -35,6 +35,32 @@ var squirtMain = (function () {
 
         // list view click handler
         $("#history-list").on('click', 'li a', navigateToHistoryDetailView);
+
+        initRequestParameters();
+    }
+
+    function initRequestParameters() {
+        // interval
+        $("#interval-header .ui-btn-text").html(ds.interval.getTitleHtml());
+
+        // sync with the data and ui
+        $("#interval-unit input[type='radio']").each(function(i, el) {
+            if (el.value == ds.interval.getUnit()) {
+                // hard to believe, but need to click twice ?!!!
+                $(el).click(); $(el).click();
+            }
+        });
+
+        // event handlers
+        $("#interval").on('change', function(event) {
+            ds.interval.setValue(event.target.value);
+            $("#interval-header .ui-btn-text").html(ds.interval.getTitleHtml());
+        });
+
+        $("#interval-unit input[type='radio']").on('change', function(event) {
+            ds.interval.setUnit(event.target.value);
+            $("#interval-header .ui-btn-text").html(ds.interval.getTitleHtml());
+        });
     }
 
     function updateRemoteStateRepeatedly() {

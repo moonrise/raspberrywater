@@ -54,6 +54,7 @@
     <link rel="stylesheet" href="main.css"/>
 
     <script src="common.js"></script>
+    <script src="datastore.js"></script>
     <script src="main.js"></script>
     <script src="details.js"></script>
 
@@ -143,25 +144,25 @@
                     <input id="frequency" type="range" data-highlight="true" min="1" max="100" value="1"/>
                 </div>
                 <div data-role="collapsible">
-                    <h5>with the interval of</h5>
+                    <h5 id="interval-header">with the interval of</h5>
                     <input id="interval" type="range" min="1" max="100" value="1"/>
-                    <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
-                        <input type="radio" id="interval-second" name="interval-second" value="s">
+                    <fieldset id="interval-unit" data-role="controlgroup" data-type="horizontal" data-mini="true">
+                        <input type="radio" id="interval-second" name="interval" value="s">
                         <label for="interval-second">second</label>
-                        <input type="radio" id="interval-minute" name="interval-minute" value="m">
+                        <input type="radio" id="interval-minute" name="interval" value="m">
                         <label for="interval-minute">minute</label>
-                        <input type="radio" id="interval-hour" value="h" name="interval-hour" checked="checked">
+                        <input type="radio" id="interval-hour" value="h" name="interval" checked="checked">
                         <label for="interval-hour">hour</label>
-                        <input type="radio" id="interval-day" name="interval-day" value="d">
+                        <input type="radio" id="interval-day" name="interval" value="d">
                         <label for="interval-day">day</label>
                     </fieldset>
                 </div>
                 <div data-role="collapsible">
                     <h5>starting at</h5>
                     <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
-                        <input type="radio" id="start-now" name="start-now" value="0" checked="checked">
+                        <input type="radio" id="start-now" name="start" value="0" checked="checked">
                         <label for="start-now">immediately</label>
-                        <input type="radio" id="start-at" name="start-at" value="1">
+                        <input type="radio" id="start-at" name="start" value="1">
                         <label for="start-at">later at</label>
                     </fieldset>
                     <div class="ui-grid-a">
