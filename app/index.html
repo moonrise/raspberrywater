@@ -70,7 +70,7 @@
 
 <div data-role="page" id="main-page" data-theme="e">
     <div data-role="header" data-theme="e">
-        <h3>Hydroid</h3>
+        <h3>hydroid</h3>
     </div>
 
     <div data-role="content">
@@ -96,9 +96,9 @@
 
         <div>
             <a id="simulate-squirt-delivery-button" data-role="button" data-icon="gear" data-iconpos="right" data-mini="true"
-               data-theme="e" style="display: inline-block">Simulate Squirt Delivery</a>
+               data-theme="e" style="display: inline-block">simulate squirt delivery</a>
             <a id="pending-request-refresh-button" data-role="button" data-icon="refresh" data-iconpos="right" data-mini="true"
-                    style="display: inline-block">Refresh</a>
+                    style="display: inline-block">refresh</a>
         </div>
 
         <!--
@@ -113,103 +113,75 @@
         -->
 
         <div data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
-             data-collapsed="false" data-corners="false" style="margin-top:20px">
+             data-collapsed="false" data-corners="false" style="margin-top:20px;padding: 0px">
             <legend>new request</legend>
 
-            <div class="ui-grid-b">
-                <div class="ui-block-a">
-                    <div class="grid-cell ui-bar-e">
-                        <p class="grid-cell-header 0">drops</p>
-                        <input id="drop-input" type="range" value="1" min="0" max="5"
-                               data-mini="false" data-highlight="true" data-theme="e" data-track-theme="e">
-                               <!--class="ui-slider-no-text-input ui-hidden-accessible"-->
-                    </div>
+            <div data-role="collapsible-set" data-theme="e" data-content-theme="e" data-mini="true"
+                data-inset="false" data-expanded-icon="arrow-d" data-collapsed-icon="arrow-r"
+                style="margin: 0px;padding: 0px">
+                <div data-role="collapsible">
+                    <h5>how many drops</h5>
+                    <input id="drop-input" type="range" value="1" min="0" max="5"
+                           data-mini="false" data-highlight="true" data-theme="e" data-track-theme="e">
                 </div>
-                <div class="ui-block-b">
-                    <div class="grid-cell ui-bar-e">
-                        <p class="grid-cell-header 0">photo</p>
-                        <select data-role="slider" data-mini="true">
-                            <option value="0">no</option>
-                            <option value="1">yes</option>
-                        </select>
-                    </div>
+                <div data-role="collapsible">
+                    <h5>take photo</h5>
+                    <select data-role="slider" data-mini="true">
+                        <option value="0">no</option>
+                        <option value="1">yes</option>
+                    </select>
                 </div>
-                <div class="ui-block-c">
-                    <div class="grid-cell ui-bar-e">
-                        <p class="grid-cell-header 0">readings</p>
-                        <select data-role="slider" data-mini="true">
-                            <option value="0">no</option>
-                            <option value="1">yes</option>
-                        </select>
-                    </div>
+                <div data-role="collapsible">
+                    <h5>temperature & moisture reading</h5>
+                    <select data-role="slider" data-mini="true">
+                        <option value="0">no</option>
+                        <option value="1">yes</option>
+                    </select>
                 </div>
-            </div>
-
-
-            <p></p>
-
-
-            <!--
-            <div>
-                <p style="display: inline">hello</p>
-                <p style="display: inline;float: none">there</p>
-                <input style="display: inline;float: right;width: 150px;" type="range"/>
-                <select style="display: inline-block;width: 150px;float: right"/>
-                <button style="display: inline;width: 150px;float: right"/>
-            </div>
-            -->
-
-            <div class="ui-grid-b">
-                <div class="ui-block-a">
-                    <div class="grid-cell ui-bar-e">
-                        <p class="grid-cell-header">runs</p>
-                        <input id="frequency" type="range" data-highlight="true" min="1" max="100" value="1"/>
-                    </div>
+                <div data-role="collapsible">
+                    <h5>run N times</h5>
+                    <input id="frequency" type="range" data-highlight="true" min="1" max="100" value="1"/>
                 </div>
-                <div class="ui-block-b">
-                    <div class="grid-cell ui-bar-e">
-                        <p class="grid-cell-header">interval</p>
-                        <div class="ui-grid-a">
-                            <div class="ui-block-a" style="width: 70%;">
-                                <input id="interval" type="range" min="1" max="100" value="1"/>
-                            </div>
-                            <div class="ui-block-b" style="width: 30%">
-                                <select id="interval-unit">
-                                    <option value="1">day</option>
-                                    <option value="2">hour</option>
-                                    <option value="3">minute</option>
-                                    <option value="4">second</option>
-                                </select>
-                            </div>
+                <div data-role="collapsible">
+                    <h5>with the interval of</h5>
+                    <input id="interval" type="range" min="1" max="100" value="1"/>
+                    <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                        <input type="radio" id="interval-second" name="interval-second" value="s">
+                        <label for="interval-second">second</label>
+                        <input type="radio" id="interval-minute" name="interval-minute" value="m">
+                        <label for="interval-minute">minute</label>
+                        <input type="radio" id="interval-hour" value="h" name="interval-hour" checked="checked">
+                        <label for="interval-hour">hour</label>
+                        <input type="radio" id="interval-day" name="interval-day" value="d">
+                        <label for="interval-day">day</label>
+                    </fieldset>
+                </div>
+                <div data-role="collapsible">
+                    <h5>starting at</h5>
+                    <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                        <input type="radio" id="start-now" name="start-now" value="0" checked="checked">
+                        <label for="start-now">immediately</label>
+                        <input type="radio" id="start-at" name="start-at" value="1">
+                        <label for="start-at">later at</label>
+                    </fieldset>
+                    <div class="ui-grid-a">
+                        <div class="ui-block-a">
+                            <input id="start-date" type="date" data-role="datebox" data-options='{"mode":"datebox"}' style="z-index: 1000"/>
+                        </div>
+                        <div class="ui-block-b">
+                            <input id="start-time" type="date" data-role="datebox" data-options='{"mode":"timebox"}'/>
                         </div>
                     </div>
                 </div>
-                <div class="ui-block-c">
-                    <div class="grid-cell ui-bar-e">
-                        <p class="grid-cell-header">start at</p>
-                        <div class="ui-grid-b">
-                            <div class="ui-block-a">
-                                <a data-role="button">Now</a>
-                            </div>
-                            <div class="ui-block-b">
-                                <input id="start-date" type="date" data-role="datebox" data-options='{"mode":"datebox"}' style="z-index: 1000"/>
-                            </div>
-                            <div class="ui-block-c">
-                                <input id="start-time" type="date" data-role="datebox" data-options='{"mode":"timebox"}'/>
-                            </div>
-                        </div>
-                    </div>
+                <div data-role="collapsible">
+                    <h5>note</h5>
+                    <input type="text" id="note-input" data-theme="b" value="">
                 </div>
             </div>
 
-            <div data-role="fieldcontain">
-                <label label for="note-input">note:</label>
-                <input type="text" id="note-input" data-theme="b" value="">
-            </div>
-
-            <a class="horizontal" id="request-squirt-button" data-role="button" data-mini="true"
-               data-icon="gear" data-iconpos="right" data-theme="b"
-               style="display: inline-block">Submit</a>
+            <a id="request-squirt-button" data-role="button" data-mini="true"
+               style="margin-top: 12px"
+               data-icon="gear" data-iconpos="right" data-theme="e">submit request</a>
         </div>
 
         <div id="history-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
