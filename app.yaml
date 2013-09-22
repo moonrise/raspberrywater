@@ -9,8 +9,9 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
-- url: /s
-  static_dir: app
+- url: /(.*\.(html|js|css|png|jpg|gif))
+  static_files: app/\1
+  upload: app/.*
 
 - url: /app.*
   script: waterapp.ticketstore.main

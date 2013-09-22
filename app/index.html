@@ -17,10 +17,33 @@
     -->
 
     <link rel="stylesheet" href="jquery.mobile-1.3.2.css"/>
+
+    <!-- jqm-datebox: local sourcing does not work for some reason, not all !! -->
+    <!--<link rel="stylesheet" href="jqm-datebox.min.css"/>-->
+    <!--<link rel="stylesheet" href="jqm-datebox.min.css"/>-->
+    <link rel="stylesheet" type="text/css" href="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.min.css" />
+
+
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="jquery.mobile-1.3.2.js"></script>
     <script src="moment.min.js"></script>
     <script src="webtoolkit-sprintf.js"></script>
+
+    <!-- jqm-datebox: local sourcing does not work for some reason, not all !! -->
+    <!--<script src="jqm-datebox.core.min.js"></script>-->
+    <!--<script src="jqm-datebox.comp.datebox.min.js"></script>-->
+    <!--<script src="jqm-datebox.comp.durationbox.min.js"></script>-->
+    <!--<script src="jqm-datebox.comp.custombox.min.js"></script>-->
+    <!--<script src="jquery.mobile.datebox.i18n.en_US.utf8.js"></script>-->
+    <!--<script src="jqm-datebox.core.min.js"></script>-->
+    <!--<script src="jqm-datebox.comp.durationbox.min.js"></script>-->
+    <!--<script src="jquery.mobile.datebox.i18n.en_US.utf8.js"></script>-->
+    <script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.core.min.js"></script>
+    <script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.mode.calbox.min.js"></script>
+    <script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.mode.datebox.min.js"></script>
+    <script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.mode.durationbox.min.js"></script>
+    <script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.mode.custombox.min.js"></script>
+    <script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/i18n/jquery.mobile.datebox.i18n.en_US.utf8.js"></script>
 
     <!--
     <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.0-alpha.2/jquery.mobile-1.4.0-alpha.2.min.css">
@@ -78,25 +101,113 @@
                     style="display: inline-block">Refresh</a>
         </div>
 
+        <!--
+        <input id="start-date" type="date" data-role="datebox" data-options='{"mode":"datebox"}' z/>
+        <input id="start-time" type="date" data-role="datebox" data-options='{"mode":"timebox"}'/>
+        <input id="duration" type="date" data-role="datebox" data-options='{"mode":"durationbox"}'/>
+
+        <input type="number" data-clear-btn="true" pattern="[0-9]*"/>
+        <input type="datetime" data-clear-btn="true"/>
+        <input type="datetime-local" data-clear-btn="true"/>
+        <input type="time" data-clear-btn="true"/>
+        -->
+
         <div data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
              data-collapsed="false" data-corners="false" style="margin-top:20px">
             <legend>new request</legend>
 
-            <div data-role="fieldcontain">
-                <label for="drop-input">drops:</label>
-                <input id="drop-input" type="range" value="1" min="0" max="5" data-mini="true"
-                       data-highlight="true" data-theme="b" data-track-theme="d">
+            <div class="ui-grid-b">
+                <div class="ui-block-a">
+                    <div class="grid-cell ui-bar-e">
+                        <p class="grid-cell-header 0">drops</p>
+                        <input id="drop-input" type="range" value="1" min="0" max="5"
+                               data-mini="false" data-highlight="true" data-theme="e" data-track-theme="e">
+                               <!--class="ui-slider-no-text-input ui-hidden-accessible"-->
+                    </div>
+                </div>
+                <div class="ui-block-b">
+                    <div class="grid-cell ui-bar-e">
+                        <p class="grid-cell-header 0">photo</p>
+                        <select data-role="slider" data-mini="true">
+                            <option value="0">no</option>
+                            <option value="1">yes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="ui-block-c">
+                    <div class="grid-cell ui-bar-e">
+                        <p class="grid-cell-header 0">readings</p>
+                        <select data-role="slider" data-mini="true">
+                            <option value="0">no</option>
+                            <option value="1">yes</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            <div data-role="fieldcontain">
-                <label for="note-input">note:</label>
-                <input type="text" id="note-input" data-theme="b" value="">
-            </div>
 
+            <p></p>
+
+
+            <!--
             <div>
-                <a id="request-squirt-button" data-role="button" data-mini="true"
+                <p style="display: inline">hello</p>
+                <p style="display: inline;float: none">there</p>
+                <input style="display: inline;float: right;width: 150px;" type="range"/>
+                <select style="display: inline-block;width: 150px;float: right"/>
+                <button style="display: inline;width: 150px;float: right"/>
+            </div>
+            -->
+
+            <div class="ui-grid-b">
+                <div class="ui-block-a">
+                    <div class="grid-cell ui-bar-e">
+                        <p class="grid-cell-header">runs</p>
+                        <input id="frequency" type="range" min="1" max="100" value="1" data-mini="false"/>
+                    </div>
+                </div>
+                <div class="ui-block-b">
+                    <div class="grid-cell ui-bar-e">
+                        <p class="grid-cell-header">interval</p>
+                        <div class="ui-grid-a">
+                            <div class="ui-block-b">
+                                <input id="interval" type="range" min="1" max="100" value="1"/>
+                            </div>
+                            <div class="ui-block-a">
+                                <select id="interval-unit">
+                                    <option value="1">day</option>
+                                    <option value="2">hour</option>
+                                    <option value="3">minute</option>
+                                    <option value="4">second</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui-block-c">
+                    <div class="grid-cell ui-bar-e">
+                        <p class="grid-cell-header">start at</p>
+                        <div class="ui-grid-b">
+                            <div class="ui-block-a">
+                                <button data-mini="false">Now</button>
+                            </div>
+                            <div class="ui-block-b">
+                                <input id="start-date" type="date" data-role="datebox" data-options='{"mode":"datebox"}' style="z-index: 1000"/>
+                            </div>
+                            <div class="ui-block-c">
+                                <input id="start-time" type="date" data-role="datebox" data-options='{"mode":"timebox"}'/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="horizontal-div">
+                <p class="horizontal">note:</p>
+                <input class="horizontal" type="text" id="note-input" data-theme="b" value="" data-role="none">
+                <a class="horizontal" id="request-squirt-button" data-role="button" data-mini="true"
                    data-icon="gear" data-iconpos="right" data-theme="b"
-                   style="display: inline-block">Request Squirt</a>
+                   style="display: inline-block">Submit</a>
             </div>
         </div>
 
