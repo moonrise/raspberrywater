@@ -45,9 +45,37 @@ var squirtMain = (function () {
         //
         $("#drops-header .ui-btn-text").html(ds.drops.getTitleHtml());
 
-        $("#drop-input").on('change', function(event) {
+        $("#drops-input").on('change', function(event) {
             ds.drops.setValue(event.target.value);
             $("#drops-header .ui-btn-text").html(ds.drops.getTitleHtml());
+        });
+
+
+        //
+        // photo
+        //
+        $("#photo-header .ui-btn-text").html(ds.photo.getTitleHtml());
+
+        $("#isphoto").val(ds.photo.getStringValue());
+        $("#isphoto").slider("refresh");
+
+        $("#isphoto").on('change', function(event) {
+            ds.photo.setValue($(this).val());
+            $("#photo-header .ui-btn-text").html(ds.photo.getTitleHtml());
+        });
+
+
+        //
+        // env read
+        //
+        $("#envread-header .ui-btn-text").html(ds.envread.getTitleHtml());
+
+        $("#isenvread").val(ds.envread.getStringValue());
+        $("#isenvread").slider("refresh");
+
+        $("#isenvread").on('change', function(event) {
+            ds.envread.setValue($(this).val());
+            $("#envread-header .ui-btn-text").html(ds.envread.getTitleHtml());
         });
 
 

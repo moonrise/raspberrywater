@@ -121,30 +121,30 @@
                 data-inset="false" data-expanded-icon="arrow-d" data-collapsed-icon="arrow-r"
                 style="margin: 0px;padding: 0px">
                 <div data-role="collapsible">
-                    <h5 id="drops-header">how many drops</h5>
-                    <input id="drop-input" type="range" value="1" min="0" max="5"
+                    <h5 id="drops-header">drops</h5>
+                    <input id="drops-input" type="range" value="1" min="0" max="5"
                            data-mini="false" data-highlight="true" data-theme="e" data-track-theme="e">
                 </div>
                 <div data-role="collapsible">
-                    <h5>take photo</h5>
-                    <select data-role="slider" data-mini="true">
+                    <h5 id="photo-header">photo</h5>
+                    <select id="isphoto" data-role="slider" data-mini="true">
                         <option value="0">no</option>
                         <option value="1">yes</option>
                     </select>
                 </div>
                 <div data-role="collapsible">
-                    <h5>temperature & moisture reading</h5>
-                    <select data-role="slider" data-mini="true">
+                    <h5 id="envread-header">temperature & moisture</h5>
+                    <select id="isenvread" data-role="slider" data-mini="true">
                         <option value="0">no</option>
                         <option value="1">yes</option>
                     </select>
                 </div>
                 <div data-role="collapsible">
-                    <h5 id="runs-header">run N times</h5>
+                    <h5 id="runs-header">runs</h5>
                     <input id="runs" type="range" data-highlight="true" min="1" max="100" value="1"/>
                 </div>
                 <div data-role="collapsible">
-                    <h5 id="interval-header">with the interval of</h5>
+                    <h5 id="interval-header">interval</h5>
                     <input id="interval" type="range" min="1" max="100" value="1"/>
                     <fieldset id="interval-unit" data-role="controlgroup" data-type="horizontal" data-mini="true">
                         <input type="radio" id="interval-second" name="interval" value="s">
@@ -158,8 +158,8 @@
                     </fieldset>
                 </div>
                 <div data-role="collapsible">
-                    <h5>starting at</h5>
-                    <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                    <h5 id="start-header">starting</h5>
+                    <fieldset id="start-select" data-role="controlgroup" data-type="horizontal" data-mini="true">
                         <input type="radio" id="start-now" name="start" value="0" checked="checked">
                         <label for="start-now">immediately</label>
                         <input type="radio" id="start-at" name="start" value="1">

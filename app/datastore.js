@@ -12,7 +12,7 @@ var ds = (function() {
         const defaultValue = 1;
         const titleFormatter = "how many drops: <span style='font-weight: bold; color: blue'><i>%s</i></span>";
 
-        var currentValue = 1;
+        var currentValue = defaultValue;
 
         function getLabel(value) {
             if (value == 0) {
@@ -37,11 +37,63 @@ var ds = (function() {
     })();
 
 
+    var photo = (function() {
+        const defaultValue = false;
+        const titleFormatter = "take photo?: <span style='font-weight: bold; color: blue'><i>%s</i></span>";
+
+        var currentValue = defaultValue;
+
+        return {
+            getTitleHtml: function() {
+                return sprintf(titleFormatter, currentValue ? "yes" : "no");
+            },
+
+            setValue: function(value) {
+                currentValue = value != "0";
+            },
+
+            getValue: function() {
+                return currentValue;
+            },
+
+            getStringValue: function() {
+                return currentValue ? "1" : "0";
+            }
+        }
+    })();
+
+
+    var envread = (function() {
+        const defaultValue = true;
+        const titleFormatter = "read temperature & moisture?: <span style='font-weight: bold; color: blue'><i>%s</i></span>";
+
+        var currentValue = defaultValue;
+
+        return {
+            getTitleHtml: function() {
+                return sprintf(titleFormatter, currentValue ? "yes" : "no");
+            },
+
+            setValue: function(value) {
+                currentValue = value != "0";
+            },
+
+            getValue: function() {
+                return currentValue;
+            },
+
+            getStringValue: function() {
+                return currentValue ? "1" : "0";
+            }
+        }
+    })();
+
+
     var runs = (function() {
         const defaultValue = 1;
         const titleFormatter = "run <span style='font-weight: bold; color: blue'><i>%s</i></span>";
 
-        var currentValue = 1;
+        var currentValue = defaultValue;
 
         function getLabel(value) {
             if (value == 1) {
@@ -72,7 +124,7 @@ var ds = (function() {
         const defaultUnit = "d";
         const titleFormatter = "with the interval of <span style='font-weight: bold; color: blue'><i>%d %s</i></span>";
 
-        var currentValue = 1;
+        var currentValue = defaultValue;
         var currentUnit = defaultUnit;
 
         function getUnitLabel(value, unit) {
@@ -114,6 +166,8 @@ var ds = (function() {
     //
     return {
         drops: drops,
+        photo: photo,
+        envread: envread,
         runs: runs,
         interval: interval
     }
