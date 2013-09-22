@@ -96,10 +96,7 @@ var ds = (function() {
         var currentValue = defaultValue;
 
         function getLabel(value) {
-            if (value == 1) {
-                return "once";
-            }
-            return sprintf("%d times", value);
+            return squirtCommon.getRunLabel(value);
         }
 
         return {
@@ -122,28 +119,14 @@ var ds = (function() {
         // unit values are s, m, h, d for second, minute, hour and day
         const defaultValue = 1;
         const defaultUnit = "d";
-        const titleFormatter = "with the interval of <span style='font-weight: bold; color: blue'><i>%d %s</i></span>";
+        const titleFormatter = "with the interval of <span style='font-weight: bold; color: blue'><i>%s</i></span>";
 
         var currentValue = defaultValue;
         var currentUnit = defaultUnit;
 
-        function getUnitLabel(value, unit) {
-            switch (unit) {
-                case 's':
-                    return value == 1 ? "second" : "seconds";
-                case 'm':
-                    return value == 1 ? "minute" : "minutes";
-                case 'h':
-                    return value == 1 ? "hour" : "hours";
-                case 'd':
-                    return value == 1 ? "day" : "days";
-                default:
-                    return "Unknown"
-            }
-        }
         return {
             getTitleHtml: function() {
-                return sprintf(titleFormatter, currentValue, getUnitLabel(currentValue, currentUnit));
+                return sprintf(titleFormatter, squirtCommon.getIntervalStringValue(currentValue, currentUnit));
             },
 
             getValue: function() {

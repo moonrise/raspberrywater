@@ -174,11 +174,13 @@ var squirtMain = (function () {
         $("#request-items").html(squirtCommon.formatRequestItemsHtml(jsonResponse, 14));
         if (jsonResponse.requestDate > 0) {
             isRequestPending = true;
+            $("#request-run").html(squirtCommon.formatRequestRunHtml(jsonResponse));
             $("#request-time").text(squirtCommon.formatDate(jsonResponse.requestDate));
             $("#request-note").text(jsonResponse.requestNote);
         }
         else {
             isRequestPending = false;
+            $("#request-run").text("");
             $("#request-time").text("");
             $("#request-note").text("");
         }
@@ -209,9 +211,9 @@ var squirtMain = (function () {
             e.push(sprintf('<img src="images2/%s" hspace="6" vspace="6"/>', imageFile));
             e.push(sprintf('<p style="font-size: 12px">request <strong>%d</strong>:  %s</p>',
                             item.ticket, squirtCommon.formatRequestItemsImage(item, 13)));
+            e.push(sprintf('<p>request run: %s</p>', squirtCommon.formatRequestRunHtml(item)));
             e.push(sprintf('<p>%s <image src="images2/arrow-right.png" height=10/> %s</p>',
                             squirtCommon.formatDateShort(item.requestDate), squirtCommon.formatDateShort(item.deliveryDate)));
-            e.push(sprintf('<p>request note: %s</p>', item.requestNote));
             e.push(sprintf('<p>delivery note: %s</p>', squirtCommon.iconifyDeliveryNote(item.deliveryNote, 10)));
             e.push('</a></li>');
 

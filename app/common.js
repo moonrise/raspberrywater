@@ -10,6 +10,7 @@
 var squirtCommon = (function () {
     const DateFormat = "hh:mm:ss a, MM/DD/YYYY";
     const DateFormatShort = "hh:mm:ss a, MM/DD";
+    const DateFormatShorter = "hh:mm a, MM/DD";
 
 
     function buildJsonAPIRequest(command, params, onOK, onNotOK, onDone) {
@@ -36,15 +37,20 @@ var squirtCommon = (function () {
     }
 
     function formatDate(millisSinceEpoch) {
-        if (millisSinceEpoch && millisSinceEpoch > 0) {
-            return moment(millisSinceEpoch).format(DateFormat);
-        }
-        return "";
+        return formatDateTime(millisSinceEpoch, DateFormat);
     }
 
     function formatDateShort(millisSinceEpoch) {
+        return formatDateTime(millisSinceEpoch, DateFormatShort);
+    }
+
+    function formatDateShorter(millisSinceEpoch) {
+        return formatDateTime(millisSinceEpoch, DateFormatShorter);
+    }
+
+    function formatDateTime(millisSinceEpoch, formatString) {
         if (millisSinceEpoch && millisSinceEpoch > 0) {
-            return moment(millisSinceEpoch).format(DateFormatShort);
+            return moment(millisSinceEpoch).format(formatString);
         }
         return "";
     }
@@ -123,8 +129,45 @@ var squirtCommon = (function () {
             items.push(squirtCommon.getGaugeImage(size));
         }
 
-        return items.length == 0 ? squirtCommon.getNilImage(size) : items.join('&nbsp;');
+        return items.length == 0 ? squirtCommon.getNilImage(size) : items.join('&nbsp;&nbsp;');
     }
+
+    function formatRequestRunHtml(json) {
+        if (json.runs == 1) {
+            return getRunLabel(json.runs);
+        }
+
+        return sprintf("%dx%d%s @ %s", json.runs, json.interval, json.intervalUnit,
+                        formatDateShorter(json.start));
+    }
+
+    function getRunLabel(value) {
+        if (value == 1) {
+            return "once";
+        }
+        return sprintf("%d times", value);
+    }
+
+    function getIntervalStringValue(value, unit) {
+        return sprintf("%d %s", value, getIntervalUnitLabel(value, unit));
+    }
+
+    function getIntervalUnitLabel(value, unit) {
+        switch (unit) {
+            case 's':
+                return value == 1 ? "second" : "seconds";
+            case 'm':
+                return value == 1 ? "minute" : "minutes";
+            case 'h':
+                return value == 1 ? "hour" : "hours";
+            case 'd':
+                return value == 1 ? "day" : "days";
+            default:
+                return "Unknown"
+        }
+    }
+
+
 
     //
     // public API
@@ -141,6 +184,9 @@ var squirtCommon = (function () {
 
         formatRequestItemsHtml: formatRequestItemsHtml,
         formatRequestItemsImage: formatRequestItemsImage,
+        formatRequestRunHtml: formatRequestRunHtml,
+        getRunLabel: getRunLabel,
+        getIntervalStringValue: getIntervalStringValue,
         iconifyDeliveryNote: iconifyDeliveryNote,
 
         getOKImage: getOkImage,
