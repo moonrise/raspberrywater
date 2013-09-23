@@ -36,12 +36,15 @@ var squirtDetails = (function () {
         $("#details-bar .ui-btn-text").html(htmlTitle); // $(#details-bar).html() destroys the style
 
         // update detail area
-        $("#details-ticket").text(item.ticket);
-        $("#details-drop").html(squirtCommon.getWaterDropImages(item.drops, 14));
+        $("#details-request-items").html(
+            sprintf('<strong>%d</strong>. %s',
+                    item.ticket, squirtCommon.formatRequestItemsImage(item, 16)));
+        $("#details-request-run").html(squirtCommon.formatRequestRunHtml(item));
         $("#details-request-time").text(squirtCommon.formatDate(item.requestDate));
         $("#details-request-note").text(item.requestNote);
         $("#details-delivery-time").text(squirtCommon.formatDate(item.deliveryDate));
-        $("#details-delivery-note").html(squirtCommon.iconifyDeliveryNote(item.deliveryNote, 14));
+        $("#details-delivery-stat").html(squirtCommon.getDeliveryStatHtml(item, 16));
+        $("#details-delivery-note").html(squirtCommon.getDeliveryNoteHtml(item, 16));
 
         // debug-only
         $("#details-blob-key").text(item.imageBlobKey);

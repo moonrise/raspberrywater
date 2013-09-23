@@ -110,12 +110,13 @@ var squirtCommon = (function () {
         return sprintf("<img src='images2/gauge.png' height='%d'/>", size);
     }
 
-    function getDeliveryStatusHtml(json, iconSize) {
-        var runFinishedPercent = Math.floor(100. * json.runsFinished / json.runs + 0.5);
-        var runStat = sprintf("task %d/%d (%d%)", json.runsFinished, json.runs, runFinishedPercent);
+    function getRunCompletionPercent(json) {
+        return Math.floor(100. * json.runsFinished / json.runs + 0.5);
+    }
 
+    function getRunStatusImage(json, iconSize) {
         var image = getQuestionImage(iconSize);
-        if (runFinishedPercent == 100) {
+        if (getRunCompletionPercent(json) == 100) {
             image = getOkImage(iconSize);
         }
         else if (json.finished) {
@@ -124,14 +125,21 @@ var squirtCommon = (function () {
         else if (json.finished == false) {
             image = getBusyImage(iconSize);
         }
+        return image;
+    }
 
-        var deliveryNote = null;
-        if (json.deliveryNote != null && json.deliveryNote.toLowerCase() != "ok") {
-            deliveryNote = sprintf(" - %s", json.deliveryDate);
-            return getOkImage(iconSize);
-        }
+    function getDeliveryStatHtml(json, iconSize) {
+        return sprintf("%d/%d runs finished (%d%) &nbsp; %s",
+                        json.runsFinished, json.runs, getRunCompletionPercent(json), getRunStatusImage(json, iconSize));
+    }
 
-        return sprintf("%s%s&nbsp;&nbsp;%s", runStat, deliveryNote ? deliveryNote : '', image);
+    function getDeliveryNoteHtml(json, iconSize) {
+        return sprintf("%s", json.deliveryNote);
+    }
+
+    function getDeliveryStatusHtml(json, iconSize) {
+        var runStat = sprintf("runs %d/%d (%d%)", json.runsFinished, json.runs, getRunCompletionPercent(json));
+        return sprintf("%s - %s&nbsp;&nbsp;%s", runStat, json.deliveryNote, getRunStatusImage(json, iconSize));
     }
 
     function formatRequestItemsHtml(json, size) {
@@ -230,6 +238,8 @@ var squirtCommon = (function () {
         formatStartTime: formatStartTime,
         getRunLabel: getRunLabel,
         getIntervalStringValue: getIntervalStringValue,
+        getDeliveryStatHtml: getDeliveryStatHtml,
+        getDeliveryNoteHtml: getDeliveryNoteHtml,
         getDeliveryStatusHtml: getDeliveryStatusHtml,
 
         getOKImage: getOkImage,

@@ -154,7 +154,7 @@ var ds = (function() {
 
         var currentNowValue = defaultNowValue;
         var time = squirtCommon.getMilliSinceEpoch() + 60*60*1000;  // one hour later by default
-        time = squirtCommon.getMilliSinceEpoch() + 30*1000;  // shorter delay for debug
+        time = squirtCommon.getMilliSinceEpoch() + 90*1000;  // shorter delay for debug
         var dateString = 0;
         var timeString = 0;
 

@@ -48,7 +48,7 @@ def pollServer():
         pass    # can't access the server? keep on trying forever - it may work again
 
 
-def getIntervalMilliForIntervalUnit(unit):
+def getIntervalMilliForUnit(unit):
     if unit == 'm':
         return 60*1000
     elif unit == 'h':
@@ -61,7 +61,7 @@ def getIntervalMilliForIntervalUnit(unit):
 def handleServerJob(job):
     ticket = job['ticket']
 
-    if ticket in cronQueue or ticket in cronActive or ticket in cronFinished != None:
+    if ticket in cronQueue or ticket in cronActive or ticket in cronFinished:
         print "==0==> job %d is being worked on already" % ticket
         return      # already aware of it
 
@@ -73,12 +73,13 @@ def handleServerJob(job):
     start = job['start']
 
     if runs == 1 and start < 0:   # once immediately
+        job['interval'] = 0
         queueJob(OneShotJob(ticket, onUserTask, drops, photo, envread))
     else:
         startTime = job['start']
         if startTime < 0:
             startTime = getMilliSinceEpoch()    # use now as the start time
-        interval = job['interval'] * getIntervalMilliForIntervalUnit(job['interval'])
+        interval = job['interval'] * getIntervalMilliForUnit(job['intervalUnit'])
         endTime = startTime + interval * (runs - 1) + interval * 0.9    # not too much lag
         queueJob(Job(ticket, runs, interval, startTime, endTime, onUserTask, drops, photo, envread))
 
@@ -115,11 +116,15 @@ class Job:
     # returns false if it needs to be deactivated (i.e. no more callbacks!)
     def onTimerTick(self, currentTime):
         if self.interval == 0:  # one shot job
-            self.runid = 0
+            self.runid = 1
             self.callback(self, True)
-            return
+            return False
 
         # multiple shots
+        if self.id > 0 and self.runid < 0:
+            self.runid = 0
+            onQuickAck(self)         # so that the pending request is removed in the remote
+
         currentTimeIndex = (currentTime - self.startTime) / self.interval
         if currentTime < self.startTime + currentTimeIndex * self.interval - self.interval * 0.05:
             return True
@@ -210,6 +215,17 @@ def onUserTask(job, isLast):
     pass
 
 
+def onQuickAck(job):
+    # send a quick ack
+    fireJsonApi('confirmDelivery', {
+        'ticket': job.id,
+        'runid': job.runid,
+        'finished': '0',
+        'deliveryDate': getMilliSinceEpoch(),
+        'deliveryNote': 'waiting'})
+    print "delivery ask sent for ticket %d" % job.id
+
+
 def onSquirtDelivered(job, isLast):
     # send a quick confirm
     fireJsonApi('confirmDelivery', {
@@ -217,8 +233,8 @@ def onSquirtDelivered(job, isLast):
         'runid': job.runid,
         'finished': '1' if isLast else '0',
         'deliveryDate': getMilliSinceEpoch(),
-        'deliveryNote': 'OK'})
-    # print "delivery confirmation sent for ticket %d" % job.id
+        'deliveryNote': 'finished' if isLast else 'running'})
+    print "delivery confirmation sent for ticket %d" % job.id
 
     # send a slow photo confirm
     if job.photo:

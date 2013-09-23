@@ -160,7 +160,7 @@ def SubmitSquirtRequest(jsonRequest):
     ticket = GetSingletonTicket()
 
     # replace the pending request and move the old one to history
-    if (ticket.requestDate > 0):
+    if ticket.requestDate > 0 and not GetDeliveryItemInHistory(ticket, HYDROID_UNIT_ID):
         MoveToHistory(HYDROID_UNIT_ID)
 
     # new request
@@ -179,23 +179,32 @@ def SubmitSquirtRequest(jsonRequest):
 
 
 def ConfirmDelivery(jsonRequest):
-    runid = int(jsonRequest['runid'])
-    if runid == 0:    # the first run id --> we confirm delivery started
+    deliveredTicket = int(jsonRequest['ticket'])
+    pendingTicket = GetSingletonTicket()
+
+    # the first run id --> we confirm delivery started
+    if pendingTicket.requestDate > 0 and pendingTicket.ticket == deliveredTicket\
+        and not GetDeliveryItemInHistory(deliveredTicket, HYDROID_UNIT_ID):
         MoveToHistory(HYDROID_UNIT_ID)
 
     # update the one in history
-    deliveredTicket = int(jsonRequest['ticket'])
     delivered = GetDeliveryItemForTicket(deliveredTicket, HYDROID_UNIT_ID)
     if delivered:
-        delivered.runsFinished = int(jsonRequest['runid']) + 1
+        delivered.runsFinished = int(jsonRequest['runid'])
         delivered.finished = jsonRequest['finished'] in '1'
-        delivered.deliveryDate = long(jsonRequest['deliveryDate'])
         delivered.deliveryDate = long(jsonRequest['deliveryDate'])
         delivered.deliveryNote = jsonRequest['deliveryNote']
         delivered.put()
         DirtyHistoryList();
 
     return {}
+
+
+def GetDeliveryItemInHistory(ticket, hydroidUnitId):
+    # target delivery - create one if not there
+    deliveryKey = GetDeliveryKey(ticket, hydroidUnitId)
+    delivery = deliveryKey.get()
+    return delivery
 
 
 def GetDeliveryItemForTicket(ticket, hydroidUnitId):
@@ -225,6 +234,7 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
     delivery.start = ticket.start
     delivery.requestDate = ticket.requestDate
     delivery.requestNote = ticket.requestNote
+    delivery.deliveryNote = "pending"
     delivery.put()
 
     # clear up source (the pending data) with the ticket incremented

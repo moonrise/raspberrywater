@@ -12,7 +12,7 @@ var squirtMain = (function () {
     const UPDATE_INTERVAL = 1000;
 
     var isRequestPending = false;
-    var remainingPollCount = 3;
+    var remainingPollCount = 30;
 
     var myPendingStateCid = -1;
     var myHistoryListCid = -1;
@@ -134,9 +134,9 @@ var squirtMain = (function () {
     }
 
     function activateTransientPolling() {
-        var maxPollCount = 60;
+        var maxPollCount = 1000;
         if (remainingPollCount < maxPollCount) {
-            remainingPollCount = Math.min(remainingPollCount + 10, maxPollCount);
+            remainingPollCount = Math.min(remainingPollCount + 50, maxPollCount);
         }
     }
 
