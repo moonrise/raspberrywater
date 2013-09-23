@@ -214,7 +214,7 @@ var squirtMain = (function () {
             e.push(sprintf('<p>request run: %s</p>', squirtCommon.formatRequestRunHtml(item)));
             e.push(sprintf('<p>%s <image src="images2/arrow-right.png" height=10/> %s</p>',
                             squirtCommon.formatDateShort(item.requestDate), squirtCommon.formatDateShort(item.deliveryDate)));
-            e.push(sprintf('<p>delivery note: %s</p>', squirtCommon.iconifyDeliveryNote(item.deliveryNote, 10)));
+            e.push(sprintf('<p>delivery note: %s</p>', squirtCommon.getDeliveryStatusHtml(item, 12)));
             e.push('</a></li>');
 
             htmlItems.push(e.join(''));

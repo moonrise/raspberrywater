@@ -1,3 +1,4 @@
+import sys
 import time
 import json
 import requests
@@ -47,7 +48,7 @@ def pollServer():
         pass    # can't access the server? keep on trying forever - it may work again
 
 
-def getIntervalMilliForUnit(unit):
+def getIntervalMilliForIntervalUnit(unit):
     if unit == 'm':
         return 60*1000
     elif unit == 'h':
@@ -71,17 +72,15 @@ def handleServerJob(job):
     runs = job['runs']
     start = job['start']
 
-
     if runs == 1 and start < 0:   # once immediately
         queueJob(OneShotJob(ticket, onUserTask, drops, photo, envread))
     else:
         startTime = job['start']
-        interval = job['interval'] * getIntervalMilliForUnit(job['interval'])
-        if runs == 1:
-            endTime = startTime + interval * 0.9
-        else:
-            endTime = startTime + interval * runs + interval * 0.1
-        queueJob(Job(ticket, interval, startTime, endTime, onUserTask, drops, photo, envread))
+        if startTime < 0:
+            startTime = getMilliSinceEpoch()    # use now as the start time
+        interval = job['interval'] * getIntervalMilliForIntervalUnit(job['interval'])
+        endTime = startTime + interval * (runs - 1) + interval * 0.9    # not too much lag
+        queueJob(Job(ticket, runs, interval, startTime, endTime, onUserTask, drops, photo, envread))
 
 
 class Job:
@@ -94,8 +93,9 @@ class Job:
     # - drops (int): squirt count
     # - photo (bool): take photo
     # - envread (bool): read environment vars like temperature and moisture
-    def __init__(self, id, interval, startTime, endTime, callback, drops, photo, envread):
+    def __init__(self, id, runs, interval, startTime, endTime, callback, drops, photo, envread):
         self.id = id
+        self.runs = runs
         self.interval = interval
         self.startTime = startTime
         self.endTime = endTime
@@ -107,7 +107,7 @@ class Job:
         # work variables
         self.lastEventTime = startTime - interval
         self.lastEventIndex = -1        # index may skip if falling behind
-        self.lastEventSequence = -1     # sequence does not skip
+        self.runid = -1                 # runid does not skip
 
     def dump(self):
         print "id: %d, interval: %d, start: %d, end: %d" % (self.id, self.interval, self.startTime, self.endTime)
@@ -115,7 +115,8 @@ class Job:
     # returns false if it needs to be deactivated (i.e. no more callbacks!)
     def onTimerTick(self, currentTime):
         if self.interval == 0:  # one shot job
-            self.callback(0, True, self)
+            self.runid = 0
+            self.callback(self, True)
             return
 
         # multiple shots
@@ -128,23 +129,24 @@ class Job:
 
         # fire now
         self.lastEventIndex = currentTimeIndex
-        self.lastEventSequence += 1
+        self.runid += 1
         delta = currentTime - (self.startTime + self.lastEventIndex * self.interval)
-        isLast = (self.endTime > 0) and (currentTime + self.interval > self.endTime)
-        self.callback(self.lastEventSequence, isLast, self)
-        #print "=== event fire ===> sid: %d, index: %d, seq: %d, delta: %d, isLast:%d" %\
-        #      (self.id, self.lastEventIndex, self.lastEventSequence, delta, isLast)
+        isLast = self.runid >= self.runs or (self.endTime > 0) and (currentTime + self.interval > self.endTime)
+        self.callback(self, isLast)
+        # if self.id > 0:
+        #     print "=== callback ===> ticket: %d, index: %d, runid: %d, delta: %d, isLast:%d" %\
+        #          (self.id, self.lastEventIndex, self.runid, delta, isLast)
         return not isLast
 
 
 class SystemJob(Job):
     def __init__(self, id, interval, callback):
-        Job.__init__(self, id, interval, getMilliSinceEpoch(), 0, callback, 0, 0, 0)
+        Job.__init__(self, id, sys.maxint, interval, getMilliSinceEpoch(), 0, callback, 0, 0, 0)
 
 
 class OneShotJob(Job):
     def __init__(self, id, callback, drops, photo, envread):
-        Job.__init__(self, id, 0, 0, 0, callback, drops, photo, envread)
+        Job.__init__(self, id, 1, 0, 0, 0, callback, drops, photo, envread)
 
 
 def queueJob(job):
@@ -197,24 +199,26 @@ def onRpiSystemTick(tick, isLast, job):
     pass
 
 
-def onServerPoll(tick, isLast, job):
+def onServerPoll(job, isLast):
     pollServer()
 
 
-def onUserTask(tick, isLast, job):
-    print "== task ==> ticket:%d, tick:%d, isLast:%d, drops:%d, photo:%s, envread:%s" %\
-          (job.id, tick, isLast, job.drops, job.photo, job.envread)
-    onSquirtDelivered(job)
+def onUserTask(job, isLast):
+    print "== task ==> ticket:%d, runid:%d, isLast:%d, drops:%d, photo:%s, envread:%s" %\
+          (job.id, job.runid, isLast, job.drops, job.photo, job.envread)
+    onSquirtDelivered(job, isLast)
     pass
 
 
-def onSquirtDelivered(job):
+def onSquirtDelivered(job, isLast):
     # send a quick confirm
-    fireJsonApi('confirmSquirtDelivery', {
+    fireJsonApi('confirmDelivery', {
         'ticket': job.id,
+        'runid': job.runid,
+        'finished': '1' if isLast else '0',
         'deliveryDate': getMilliSinceEpoch(),
         'deliveryNote': 'OK'})
-    print "delivery confirmation sent for ticket %d" % job.id
+    # print "delivery confirmation sent for ticket %d" % job.id
 
     # send a slow photo confirm
     if job.photo:
@@ -223,7 +227,8 @@ def onSquirtDelivered(job):
             fileName = 'test.jpg'
             uploadURL = response['url']
             print 'uplaod URL: %s' % uploadURL
-            r = requests.post(uploadURL, files={'file': open(fileName, 'rb')}, headers={'ticket': str(job.id)})
+            r = requests.post(uploadURL, files={'file': open(fileName, 'rb')},
+                              headers={'ticket': str(job.id), 'runid': str(job.runid)})
             print 'image file %s uploaded' % fileName
 
 #

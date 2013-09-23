@@ -73,6 +73,8 @@ class Delivery(ndb.Model):
     start = ndb.IntegerProperty()
     requestNote = ndb.StringProperty()
     requestDate = ndb.IntegerProperty()
+    runsFinished = ndb.IntegerProperty()  # may not reach runs because of execution lag or other issues
+    finished = ndb.BooleanProperty()      # job for the this ticket is finished
     deliveryDate = ndb.IntegerProperty()
     deliveryNote = ndb.StringProperty()
     imageBlobKey = ndb.BlobKeyProperty()
@@ -98,8 +100,8 @@ class JsonAPI(webapp2.RequestHandler):
             self.response.write(json.dumps(FetchPendingRequestStatus()))
         elif command == "submitSquirtRequest":
             self.response.write(json.dumps(SubmitSquirtRequest(jsonRequest)))
-        elif command == "confirmSquirtDelivery":
-            self.response.write(json.dumps(ConfirmSquirtDelivery(jsonRequest)))
+        elif command == "confirmDelivery":
+            self.response.write(json.dumps(ConfirmDelivery(jsonRequest)))
         elif command == "fetchHistoryList":
             self.response.write(json.dumps(FetchHistoryList()))
         elif command == "procureUploadURL":
@@ -176,14 +178,18 @@ def SubmitSquirtRequest(jsonRequest):
     return {}
 
 
-def ConfirmSquirtDelivery(jsonRequest):
-    # clear pending request - no matter what
-    MoveToHistory(HYDROID_UNIT_ID)
+def ConfirmDelivery(jsonRequest):
+    runid = int(jsonRequest['runid'])
+    if runid == 0:    # the first run id --> we confirm delivery started
+        MoveToHistory(HYDROID_UNIT_ID)
 
     # update the one in history
     deliveredTicket = int(jsonRequest['ticket'])
     delivered = GetDeliveryItemForTicket(deliveredTicket, HYDROID_UNIT_ID)
     if delivered:
+        delivered.runsFinished = int(jsonRequest['runid']) + 1
+        delivered.finished = jsonRequest['finished'] in '1'
+        delivered.deliveryDate = long(jsonRequest['deliveryDate'])
         delivered.deliveryDate = long(jsonRequest['deliveryDate'])
         delivered.deliveryNote = jsonRequest['deliveryNote']
         delivered.put()
@@ -256,6 +262,8 @@ def FetchHistoryList():
             'start': delivery.start,
             'requestNote': delivery.requestNote,
             'requestDate': delivery.requestDate,
+            'runsFinished': delivery.runsFinished,
+            'finished': delivery.finished,
             'deliveryDate': delivery.deliveryDate,
             'deliveryNote': delivery.deliveryNote,
             'imageBlobKey': str(delivery.imageBlobKey),

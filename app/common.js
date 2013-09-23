@@ -80,6 +80,11 @@ var squirtCommon = (function () {
         return sprintf("<img src='images2/ok.png' height='%d'/>", size);
     }
 
+    function getOkBlackImage(size) {
+        size = getDefaultIconSize(size, 16);
+        return sprintf("<img src='images2/ok-black.png' height='%d'/>", size);
+    }
+
     function getQuestionImage(size) {
         size = getDefaultIconSize(size, 16);
         return sprintf("<img src='images2/question.png' height='%d'/>", size);
@@ -88,6 +93,11 @@ var squirtCommon = (function () {
     function getNilImage(size) {
         size = getDefaultIconSize(size, 16);
         return sprintf("<img src='images2/none.png' height='%d'/>", size);
+    }
+
+    function getBusyImage(size) {
+        size = getDefaultIconSize(size, 16);
+        return sprintf("<img src='images2/big-roller.gif' height='%d'/>", size);
     }
 
     function getCameraImage(size) {
@@ -100,16 +110,28 @@ var squirtCommon = (function () {
         return sprintf("<img src='images2/gauge.png' height='%d'/>", size);
     }
 
-    function iconifyDeliveryNote(deliverNote, size) {
-        if (deliverNote == null || deliverNote.length == 0) {
-            return getQuestionImage(size);
+    function getDeliveryStatusHtml(json, iconSize) {
+        var runFinishedPercent = Math.floor(100. * json.runsFinished / json.runs + 0.5);
+        var runStat = sprintf("task %d/%d (%d%)", json.runsFinished, json.runs, runFinishedPercent);
+
+        var image = getQuestionImage(iconSize);
+        if (runFinishedPercent == 100) {
+            image = getOkImage(iconSize);
+        }
+        else if (json.finished) {
+            image = getOkBlackImage(iconSize);
+        }
+        else if (json.finished == false) {
+            image = getBusyImage(iconSize);
         }
 
-        if (deliverNote.toLowerCase() == "ok") {
-            return getOkImage(size);
+        var deliveryNote = null;
+        if (json.deliveryNote != null && json.deliveryNote.toLowerCase() != "ok") {
+            deliveryNote = sprintf(" - %s", json.deliveryDate);
+            return getOkImage(iconSize);
         }
 
-        return sprintf("%s (%s)", getQuestionImage(size), deliverNote);
+        return sprintf("%s%s&nbsp;&nbsp;%s", runStat, deliveryNote ? deliveryNote : '', image);
     }
 
     function formatRequestItemsHtml(json, size) {
@@ -208,7 +230,7 @@ var squirtCommon = (function () {
         formatStartTime: formatStartTime,
         getRunLabel: getRunLabel,
         getIntervalStringValue: getIntervalStringValue,
-        iconifyDeliveryNote: iconifyDeliveryNote,
+        getDeliveryStatusHtml: getDeliveryStatusHtml,
 
         getOKImage: getOkImage,
         getQuestionImage: getQuestionImage,

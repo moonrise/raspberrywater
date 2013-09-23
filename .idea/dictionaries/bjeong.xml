@@ -17,7 +17,9 @@
       <w>mili</w>
       <w>miliseconds</w>
       <w>oneshot</w>
+      <w>runid</w>
       <w>sprintf</w>
+      <w>taskid</w>
       <w>timebox</w>
       <w>webtoolkit</w>
     </words>
