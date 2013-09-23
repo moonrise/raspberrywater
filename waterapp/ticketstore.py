@@ -158,7 +158,8 @@ def SubmitSquirtRequest(jsonRequest):
     ticket = GetSingletonTicket()
 
     # replace the pending request and move the old one to history
-    MoveToHistory(HYDROID_UNIT_ID)
+    if (ticket.requestDate > 0):
+        MoveToHistory(HYDROID_UNIT_ID)
 
     # new request
     ticket.drops = int(jsonRequest['drops'])

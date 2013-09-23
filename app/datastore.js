@@ -150,7 +150,7 @@ var ds = (function() {
 
     var start = (function() {
         const defaultNowValue = true;
-        const titleFormatter = "starting%s<span style='font-weight: bold; color: blue'><i>%s</i></span>";
+        const titleFormatter = "starting <span style='font-weight: bold; color: blue'><i>%s</i></span>";
 
         var currentNowValue = defaultNowValue;
         var time = squirtCommon.getMilliSinceEpoch() + 60*60*1000;  // one hour later by default
@@ -158,21 +158,16 @@ var ds = (function() {
         var dateString = 0;
         var timeString = 0;
 
-        function getLabel() {
-            if (currentNowValue == true) {
-                return sprintf(titleFormatter, " ", "immediately");
-            }
-            else {
-                return sprintf(titleFormatter, " on ", squirtCommon.formatDate(time));
-            }
+        function getTime() {   // -1 ==> immediately
+            return currentNowValue ? -1 : time;
         }
 
         return {
-            getTitleHtml: getLabel,
-
-            getTime: function() {   // -1 ==> immediately
-                return currentNowValue ? -1 : time;
+            getTitleHtml: function() {
+                return sprintf(titleFormatter, squirtCommon.formatStartTime(getTime()));
             },
+
+            getTime: getTime,
 
             setNow: function(value) {
                 currentNowValue = value != "0";

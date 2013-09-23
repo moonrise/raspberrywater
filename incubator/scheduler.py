@@ -47,11 +47,41 @@ def pollServer():
         pass    # can't access the server? keep on trying forever - it may work again
 
 
+def getIntervalMilliForUnit(unit):
+    if unit == 'm':
+        return 60*1000
+    elif unit == 'h':
+        return 60*60*1000
+    elif unit == 'd':
+        return 24*60*60*1000
+    return 1000     # assume 's' (second)
+
+
 def handleServerJob(job):
     ticket = job['ticket']
+
+    if ticket in cronQueue or ticket in cronActive or ticket in cronFinished != None:
+        print "==0==> job %d is being worked on already" % ticket
+        return      # already aware of it
+
     drops = job['drops']
-    queueJob(OneShotJob(ticket, onUserTask, drops, False, False))
-    print "server job received for ticket %d with %d drops" % (ticket, drops)
+    photo = job['photo'] != '0'
+    envread = job['envread'] != '0'
+
+    runs = job['runs']
+    start = job['start']
+
+
+    if runs == 1 and start < 0:   # once immediately
+        queueJob(OneShotJob(ticket, onUserTask, drops, photo, envread))
+    else:
+        startTime = job['start']
+        interval = job['interval'] * getIntervalMilliForUnit(job['interval'])
+        if runs == 1:
+            endTime = startTime + interval * 0.9
+        else:
+            endTime = startTime + interval * runs + interval * 0.1
+        queueJob(Job(ticket, interval, startTime, endTime, onUserTask, drops, photo, envread))
 
 
 class Job:
@@ -63,8 +93,8 @@ class Job:
     # - callback (fn): mandatory function ref with the signature (eventSequence, isLast, job)
     # - drops (int): squirt count
     # - photo (bool): take photo
-    # - vars (bool): variables of temperature and moisture
-    def __init__(self, id, interval, startTime, endTime, callback, drops, photo, vars):
+    # - envread (bool): read environment vars like temperature and moisture
+    def __init__(self, id, interval, startTime, endTime, callback, drops, photo, envread):
         self.id = id
         self.interval = interval
         self.startTime = startTime
@@ -72,7 +102,7 @@ class Job:
         self.callback = callback
         self.drops = drops
         self.photo = photo
-        self.vars = vars
+        self.envread = envread
 
         # work variables
         self.lastEventTime = startTime - interval
@@ -102,8 +132,8 @@ class Job:
         delta = currentTime - (self.startTime + self.lastEventIndex * self.interval)
         isLast = (self.endTime > 0) and (currentTime + self.interval > self.endTime)
         self.callback(self.lastEventSequence, isLast, self)
-        print "=== event fire ===> sid: %d, index: %d, seq: %d, delta: %d, isLast:%d" %\
-              (self.id, self.lastEventIndex, self.lastEventSequence, delta, isLast)
+        #print "=== event fire ===> sid: %d, index: %d, seq: %d, delta: %d, isLast:%d" %\
+        #      (self.id, self.lastEventIndex, self.lastEventSequence, delta, isLast)
         return not isLast
 
 
@@ -113,8 +143,8 @@ class SystemJob(Job):
 
 
 class OneShotJob(Job):
-    def __init__(self, id, callback, drops, photo, vars):
-        Job.__init__(self, id, 0, 0, 0, callback, drops, photo, vars)
+    def __init__(self, id, callback, drops, photo, envread):
+        Job.__init__(self, id, 0, 0, 0, callback, drops, photo, envread)
 
 
 def queueJob(job):
@@ -158,7 +188,7 @@ def doTimedLoop(resolution=100):
             time.sleep(spareTime / 1000.0)
 
         # for debug
-        if tick > 50:
+        if tick > 5000:
             break
 
 
@@ -172,7 +202,8 @@ def onServerPoll(tick, isLast, job):
 
 
 def onUserTask(tick, isLast, job):
-    print "user task ==> tick:%d, isLast:%d, drops:%d, photo:%s, vars:%s" % (tick, isLast, job.drops, job.photo, job.vars)
+    print "== task ==> ticket:%d, tick:%d, isLast:%d, drops:%d, photo:%s, envread:%s" %\
+          (job.id, tick, isLast, job.drops, job.photo, job.envread)
     onSquirtDelivered(job)
     pass
 
@@ -183,7 +214,7 @@ def onSquirtDelivered(job):
         'ticket': job.id,
         'deliveryDate': getMilliSinceEpoch(),
         'deliveryNote': 'OK'})
-    print "squirt delivery confirmation sent for ticket %d" % job.id
+    print "delivery confirmation sent for ticket %d" % job.id
 
     # send a slow photo confirm
     if job.photo:

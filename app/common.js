@@ -133,12 +133,19 @@ var squirtCommon = (function () {
     }
 
     function formatRequestRunHtml(json) {
-        if (json.runs == 1) {
-            return getRunLabel(json.runs);
+        if (json.runs <= 0) {
+            return "--na--";
         }
 
-        return sprintf("%dx%d%s @ %s", json.runs, json.interval, json.intervalUnit,
-                        formatDateShorter(json.start));
+        var runsText = "";
+        if (json.runs == 1) {
+            runsText = getRunLabel(json.runs);
+        }
+        else {
+            runsText = sprintf("%dx%d%s", json.runs, json.interval, json.intervalUnit);
+        }
+
+        return runsText + " " + formatStartTime(json.start, true);
     }
 
     function getRunLabel(value) {
@@ -167,6 +174,19 @@ var squirtCommon = (function () {
         }
     }
 
+    function formatStartTime(time, isCompact) {
+        isCompact = isCompact === undefined ? false : isCompact;
+
+        if (time < 0) {
+            return "immediately";
+        }
+
+        if (isCompact) {
+            return " @ " + formatDateShorter(time);
+        }
+
+        return " on " + formatDate(time);
+    }
 
 
     //
@@ -185,6 +205,7 @@ var squirtCommon = (function () {
         formatRequestItemsHtml: formatRequestItemsHtml,
         formatRequestItemsImage: formatRequestItemsImage,
         formatRequestRunHtml: formatRequestRunHtml,
+        formatStartTime: formatStartTime,
         getRunLabel: getRunLabel,
         getIntervalStringValue: getIntervalStringValue,
         iconifyDeliveryNote: iconifyDeliveryNote,
