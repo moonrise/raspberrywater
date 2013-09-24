@@ -168,9 +168,13 @@ class OnUpload(blobstore_handlers.BlobstoreUploadHandler):
                 blobInfo.delete()
         else:               # multi data instance
             runid = int(self.request.headers['runid'])
-            measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID))\
-                            .filter('ticket =', ticketNo).filter('runid =', runid)
-            measure = measureQuery.fetch(1)[0]
+            # measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID))\
+            #                 .filter(Measure.ticket == ticketNo).filter(Measure.runid, runid)
+            measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).filter(Measure.ticket == ticketNo)
+            measure = None
+            for m in measureQuery:
+                measure = m
+            # measure = measureQuery.fetch(1)[0]
             if measure:
                 measure.imageBlobKey = blobInfo.key()
                 measure.imageBlobURL = images.get_serving_url(measure.imageBlobKey)
@@ -362,12 +366,10 @@ def FetchHistoryList():
 
 def FetchMeasures(jsonRequest):
     ticket = int(jsonRequest['ticket'])
-    # measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).filter('ticket =', ticket).order(Measure.runid)
-    measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).order(Measure.runid)
-    measures = measureQuery.fetch()
+    measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).filter(Measure.ticket == ticket)
 
     measureList = []
-    for m in measures:
+    for m in measureQuery:
         measureList.append({
             'runid': m.runid,
             'time': m.time,
