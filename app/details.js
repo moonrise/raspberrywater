@@ -9,7 +9,14 @@ var squirtDetails = (function () {
 
 
     function onDetailsPageInit(event) {
+        // refresh handler
+        $("#details-refresh-button").click(onDetailsRefresh);
+
         currentTicket = $(this).data("url").replace(/.*ticket=/, "");
+        onDetailsRefresh();
+    }
+
+    function onDetailsRefresh() {
         squirtCommon.fetchHistoryList(20, onFetchHistoryListOK);
     }
 
@@ -26,7 +33,9 @@ var squirtDetails = (function () {
         });
 
         // initial update
-        updateDetailsSection(historyItems[currentIndex]);
+        var historyItem = historyItems[currentIndex];
+        updateDetailsSection(historyItem);
+        updateDataTableSection(historyItem);
     }
 
     function updateDetailsSection(item) {
@@ -58,6 +67,47 @@ var squirtDetails = (function () {
         else {
             displayNoImageAvailable();
         }
+    }
+
+    function updateDataTableSection(historyItem) {
+        if (historyItem.runs == 1) {
+            historyItem.runid = 1;        // simply add runid since it is missing!
+            onTableDataReady([historyItem]);
+        }
+        else {
+            // fetch the measurement data
+            $.ajax(squirtCommon.buildJsonAPIRequest("fetchMeasures", {
+                'ticket': historyItem.ticket
+            }, function(jsonResponse) {
+                onTableDataReady(jsonResponse.measures);
+            }, function(xhr, status) {
+                alert("error: " + status);
+                alert("error: " + xhr);
+            }));
+        }
+    }
+
+    function onTableDataReady(dataItems) {
+        $("#table-body").html(buildTableRows(dataItems));
+        $("#data-table").table('refresh');
+    }
+
+    function buildTableRows(dataItems) {
+        var htmlItems = [];
+
+        $.each(dataItems, function(index, item) {
+            var e = ['<tr>'];
+            e.push(sprintf('<th>%d</th>', item.runid));
+            e.push(sprintf('<td>%d</td>', item.temperature));
+            e.push(sprintf('<td>%d</td>', item.moisture));
+            e.push(sprintf('<td>%s&nbsp;</td>',
+                            item.imageBlobURL == "None" ? "" : squirtCommon.getPhotoImage(12)));
+            e.push('</tr>');
+
+            htmlItems.push(e.join(''));
+        });
+
+        return htmlItems.join('');
     }
 
     function displayNoImageAvailable() {

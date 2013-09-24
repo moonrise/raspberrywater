@@ -4,6 +4,7 @@ import json
 import requests
 
 API_URL = 'http://192.168.2.110:8080/app/jsonApi'
+API_URL = 'http://localhost:8080/app/jsonApi'
 
 cronQueue = {}
 cronActive = {}
@@ -195,8 +196,8 @@ def doTimedLoop(resolution=100):
             time.sleep(spareTime / 1000.0)
 
         # for debug
-        if tick > 5000:
-            break
+        # if tick > 5000:
+        #     break
 
 
 def onRpiSystemTick(tick, isLast, job):
@@ -219,6 +220,7 @@ def onQuickAck(job):
     # send a quick ack
     fireJsonApi('confirmDelivery', {
         'ticket': job.id,
+        'runs': job.runs,
         'runid': job.runid,
         'finished': '0',
         'deliveryDate': getMilliSinceEpoch(),
@@ -230,8 +232,11 @@ def onSquirtDelivered(job, isLast):
     # send a quick confirm
     fireJsonApi('confirmDelivery', {
         'ticket': job.id,
+        'runs': job.runs,
         'runid': job.runid,
         'finished': '1' if isLast else '0',
+        'temperature': 71,
+        'moisture': 62,
         'deliveryDate': getMilliSinceEpoch(),
         'deliveryNote': 'finished' if isLast else 'running'})
     print "delivery confirmation sent for ticket %d" % job.id
@@ -242,9 +247,9 @@ def onSquirtDelivered(job, isLast):
         if response:
             fileName = 'test.jpg'
             uploadURL = response['url']
-            print 'uplaod URL: %s' % uploadURL
+            print 'upload URL: %s' % uploadURL
             r = requests.post(uploadURL, files={'file': open(fileName, 'rb')},
-                              headers={'ticket': str(job.id), 'runid': str(job.runid)})
+                              headers={'ticket': str(job.id), 'runid': str(job.runid), 'runs': str(job.runs)})
             print 'image file %s uploaded' % fileName
 
 #

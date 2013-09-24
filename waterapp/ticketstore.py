@@ -9,7 +9,7 @@ from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import blobstore_handlers
 
 
-HYDROID_UNIT_ID = 'hydroid9'
+HYDROID_UNIT_ID = 'hydroid6'
 
 
 def GetHydroidUnitKey(hydroidUnitId=HYDROID_UNIT_ID):
@@ -27,6 +27,7 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
     if not singletonTicket:
         ticket = Ticket(key=GetSingletonTicketKey(hydroidUnitId))
         ticket.ticket = 1           # valid ticket starts from zero
+        ticket.measure = 0          # just to keep track of the measure key
         ticket.drops = 0
         ticket.photo = "0"
         ticket.envread = "0"
@@ -44,6 +45,7 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
 
 class Ticket(ndb.Model):
     ticket = ndb.IntegerProperty()
+    measure = ndb.IntegerProperty()
     drops = ndb.IntegerProperty()
     photo = ndb.StringProperty()
     envread = ndb.StringProperty()
@@ -55,7 +57,6 @@ class Ticket(ndb.Model):
     requestDate = ndb.IntegerProperty()
     pendingStateCid = ndb.IntegerProperty()
     historyListCid = ndb.IntegerProperty()
-    imageBlobKey = ndb.BlobKeyProperty()
 
 
 def GetDeliveryKey(key, hydroidUnitId=HYDROID_UNIT_ID):
@@ -74,10 +75,47 @@ class Delivery(ndb.Model):
     requestNote = ndb.StringProperty()
     requestDate = ndb.IntegerProperty()
     runsFinished = ndb.IntegerProperty()  # may not reach runs because of execution lag or other issues
-    finished = ndb.BooleanProperty()      # job for the this ticket is finished
+    finished = ndb.BooleanProperty()      # job for this ticket is finished
     deliveryDate = ndb.IntegerProperty()
     deliveryNote = ndb.StringProperty()
+    temperature = ndb.IntegerProperty()
+    moisture = ndb.IntegerProperty()
     imageBlobKey = ndb.BlobKeyProperty()
+    imageBlobURL = ndb.StringProperty()
+
+
+class Measure(ndb.Model):
+    ticket = ndb.IntegerProperty(indexed=True)
+    runid = ndb.IntegerProperty(indexed=True)
+    time = ndb.IntegerProperty()
+    drops = ndb.IntegerProperty()
+    temperature = ndb.IntegerProperty()
+    moisture = ndb.IntegerProperty()
+    imageBlobKey = ndb.BlobKeyProperty()
+    imageBlobURL = ndb.StringProperty()
+
+
+def GetMeasureKey(key, hydroidUnitId=HYDROID_UNIT_ID):
+    return ndb.Key(Measure, key, parent=GetHydroidUnitKey(hydroidUnitId))
+
+
+def CreateMeasure(hydroidUnitId=HYDROID_UNIT_ID):
+    ticket = GetSingletonTicket()
+    ticket.measure += 1
+    ticket.put()
+    measureId = ticket.measure
+
+    measureKey = GetMeasureKey(measureId, hydroidUnitId)
+    return Measure(key=measureKey)
+
+
+def GetDeliveryItemForTicket(ticket, hydroidUnitId):
+    # target delivery - create one if not there
+    deliveryKey = GetDeliveryKey(ticket, hydroidUnitId)
+    delivery = deliveryKey.get()
+    if not delivery:
+        delivery = Delivery(key=deliveryKey)
+    return delivery
 
 
 def DirtyHistoryList():
@@ -104,6 +142,8 @@ class JsonAPI(webapp2.RequestHandler):
             self.response.write(json.dumps(ConfirmDelivery(jsonRequest)))
         elif command == "fetchHistoryList":
             self.response.write(json.dumps(FetchHistoryList()))
+        elif command == "fetchMeasures":
+            self.response.write(json.dumps(FetchMeasures(jsonRequest)))
         elif command == "procureUploadURL":
             self.response.write(json.dumps(ProcureUploadURL()))
         else:
@@ -112,17 +152,31 @@ class JsonAPI(webapp2.RequestHandler):
 
 class OnUpload(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
-        ticketNo = int(self.request.headers['Ticket'])
+        ticketNo = int(self.request.headers['ticket'])
+        runs = int(self.request.headers['runs'])
         blobInfo = self.get_uploads()[0]
 
         # store the blob key
-        delivered = GetDeliveryItemForTicket(ticketNo, HYDROID_UNIT_ID)
-        if delivered:
-            delivered.imageBlobKey = blobInfo.key()
-            delivered.put()
-            DirtyHistoryList()
-        else:
-            blobInfo.delete()
+        if runs == 1:       # single instance data is stored in the delivery data itself
+            delivered = GetDeliveryItemForTicket(ticketNo, HYDROID_UNIT_ID)
+            if delivered:
+                delivered.imageBlobKey = blobInfo.key()
+                delivered.imageBlobURL = images.get_serving_url(delivered.imageBlobKey)
+                delivered.put()
+                DirtyHistoryList()
+            else:
+                blobInfo.delete()
+        else:               # multi data instance
+            runid = int(self.request.headers['runid'])
+            measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID))\
+                            .filter('ticket =', ticketNo).filter('runid =', runid)
+            measure = measureQuery.fetch(1)[0]
+            if measure:
+                measure.imageBlobKey = blobInfo.key()
+                measure.imageBlobURL = images.get_serving_url(measure.imageBlobKey)
+                measure.put()
+            else:
+                blobInfo.delete()
 
 
 class OnView(blobstore_handlers.BlobstoreDownloadHandler):
@@ -160,7 +214,7 @@ def SubmitSquirtRequest(jsonRequest):
     ticket = GetSingletonTicket()
 
     # replace the pending request and move the old one to history
-    if ticket.requestDate > 0 and not GetDeliveryItemInHistory(ticket, HYDROID_UNIT_ID):
+    if ticket.requestDate > 0 and not GetDeliveryItemInHistory(ticket.ticket, HYDROID_UNIT_ID):
         MoveToHistory(HYDROID_UNIT_ID)
 
     # new request
@@ -187,15 +241,34 @@ def ConfirmDelivery(jsonRequest):
         and not GetDeliveryItemInHistory(deliveredTicket, HYDROID_UNIT_ID):
         MoveToHistory(HYDROID_UNIT_ID)
 
+    runid = int(jsonRequest['runid'])
+    if runid <= 0:
+        return {}
+
+    runs = int(jsonRequest['runs'])
+
     # update the one in history
     delivered = GetDeliveryItemForTicket(deliveredTicket, HYDROID_UNIT_ID)
     if delivered:
-        delivered.runsFinished = int(jsonRequest['runid'])
+        delivered.runsFinished = runid
         delivered.finished = jsonRequest['finished'] in '1'
-        delivered.deliveryDate = long(jsonRequest['deliveryDate'])
+        delivered.deliveryDate = int(jsonRequest['deliveryDate'])
         delivered.deliveryNote = jsonRequest['deliveryNote']
+        if runs == 1 and runid == 1: # single instance data is stored in the delivery data itself
+            delivered.temperature = int(jsonRequest['temperature'])
+            delivered.moisture = int(jsonRequest['moisture'])
         delivered.put()
-        DirtyHistoryList();
+        DirtyHistoryList()
+
+    # multi run data is stored in the measure db
+    if runs > 1 and runid > 0:
+        measure = CreateMeasure()
+        measure.ticket = deliveredTicket
+        measure.runid = runid
+        measure.time = int(jsonRequest['deliveryDate'])
+        measure.temperature = int(jsonRequest['temperature'])
+        measure.moisture = int(jsonRequest['moisture'])
+        measure.put()
 
     return {}
 
@@ -257,7 +330,7 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
 
 def FetchHistoryList():
     deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).order(-Delivery.ticket)
-    deliveryHistoryList = deliveryHistoryQuery.fetch(10)
+    deliveryHistoryList = deliveryHistoryQuery.fetch(5)
 
     historyList = []
     for delivery in deliveryHistoryList:
@@ -276,13 +349,37 @@ def FetchHistoryList():
             'finished': delivery.finished,
             'deliveryDate': delivery.deliveryDate,
             'deliveryNote': delivery.deliveryNote,
+            'temperature': delivery.temperature,
+            'moisture': delivery.moisture,
             'imageBlobKey': str(delivery.imageBlobKey),
-            'imageBlobURL': images.get_serving_url(delivery.imageBlobKey) if delivery.imageBlobKey else str(None)
+            'imageBlobURL': str(delivery.imageBlobURL),
         })
 
     return {'length': historyList.__len__(),
             'histories': historyList
     }
+
+
+def FetchMeasures(jsonRequest):
+    ticket = int(jsonRequest['ticket'])
+    # measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).filter('ticket =', ticket).order(Measure.runid)
+    measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).order(Measure.runid)
+    measures = measureQuery.fetch()
+
+    measureList = []
+    for m in measures:
+        measureList.append({
+            'runid': m.runid,
+            'time': m.time,
+            'drops': m.drops,
+            'temperature': m.temperature,
+            'moisture': m.moisture,
+            'imageBlobKey': str(m.imageBlobKey),
+            'imageBlobURL': str(m.imageBlobURL)
+        })
+
+    return {'length': measureList.__len__(),
+            'measures': measureList }
 
 
 def ProcureUploadURL():

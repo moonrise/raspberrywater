@@ -105,6 +105,11 @@ var squirtCommon = (function () {
         return sprintf("<img src='images2/camera.png' height='%d'/>", size);
     }
 
+    function getPhotoImage(size) {
+        size = getDefaultIconSize(size, 16);
+        return sprintf("<img src='images2/photo.png' height='%d'/>", size);
+    }
+
     function getGaugeImage(size) {
         size = getDefaultIconSize(size, 16);
         return sprintf("<img src='images2/gauge.png' height='%d'/>", size);
@@ -247,6 +252,7 @@ var squirtCommon = (function () {
         getWaterDropImages: getWaterDropImages,
         getNilImage: getNilImage,
         getCameraImage: getCameraImage,
+        getPhotoImage: getPhotoImage,
         getGaugeImage: getGaugeImage
     }
 })();

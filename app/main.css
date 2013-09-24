@@ -75,6 +75,25 @@
     color: #0e1168;
 }
 
+.ui-table-columntoggle-btn {
+    display: none !important;
+}
+.ui-table th,
+.ui-table td {
+    line-height: 1.5em;
+    text-align: right;
+    padding: .4em .5em;
+    vertical-align:top;
+}
+
+.ui-table th {
+    font-weight: normal;
+}
+
+table {
+    font-size: 14px;
+}
+
 .red-border {
     border: solid;
     border-color: red;
