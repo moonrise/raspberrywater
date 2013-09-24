@@ -4,15 +4,19 @@
 
 var squirtDetails = (function () {
     var historyItems;
-    var currentIndex;
+    var currentIndex = -1;
     var currentTicket;
 
 
     function onDetailsPageInit(event) {
         // refresh handler
         $("#details-refresh-button").click(onDetailsRefresh);
+        $("#details-prev-button").click(onDetailsPrev);
+        $("#details-next-button").click(onDetailsNext);
 
         currentTicket = $(this).data("url").replace(/.*ticket=/, "");
+        currentIndex = -1;
+        updateButtonStates();
         onDetailsRefresh();
     }
 
@@ -20,19 +24,67 @@ var squirtDetails = (function () {
         squirtCommon.fetchHistoryList(20, onFetchHistoryListOK);
     }
 
+    function onDetailsNext() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateButtonStates();
+            updateCurrentIndexDetails();
+        }
+    }
+
+    function onDetailsPrev() {
+        if (currentIndex < historyItems.length -1) {
+            currentIndex++;
+            updateButtonStates();
+            updateCurrentIndexDetails()
+        }
+    }
+
+    function updateButtonStates() {
+        // todo: won't work - add/remove class may need to look if it's there or not first?!!
+        return;
+
+        var totalItems = historyItems.length;
+
+        if (totalItems <= 0 || currentIndex == 0) {
+            $("#details-next-button").addClass('ui-disabled');
+        }
+        else {
+            $("#details-next-button").removeClass('ui-disabled');
+        }
+
+        if (totalItems <= 0 || currentIndex >= totalItems-1) {
+            $("#details-prev-button").addClass('ui-disabled');
+        }
+        else {
+            $("#details-prev-button").removeClass('ui-disabled');
+        }
+
+        $("#details-prev-button").button('refresh');
+        $("#details-next-button").button('refresh');
+    }
+
     function onFetchHistoryListOK(jsonResponse) {
         // stash history items for later navigation
         historyItems = jsonResponse.histories;
 
         // locate the current index of the initial ticket
-        $.each(historyItems, function(index, value) {
-            if (value.ticket == currentTicket) {
-                currentIndex = index;
-                return false;
-            }
-        });
+        if (currentIndex < 0) {
+            $.each(historyItems, function(index, value) {
+                if (value.ticket == currentTicket) {
+                    currentIndex = index;
+                    updateButtonStates();
+                    return false;  // breaking out of the loop since we're within this function scope
+                }
+            });
+        }
 
-        // initial update
+        if (currentIndex >= 0) {
+            updateCurrentIndexDetails()
+        }
+    }
+
+    function updateCurrentIndexDetails() {
         var historyItem = historyItems[currentIndex];
         updateDetailsSection(historyItem);
         updateDataTableSection(historyItem);
@@ -81,8 +133,7 @@ var squirtDetails = (function () {
             }, function(jsonResponse) {
                 onTableDataReady(jsonResponse.measures);
             }, function(xhr, status) {
-                alert("error: " + status);
-                alert("error: " + xhr);
+                //alert("error: " + status + ", " + xhr);
             }));
         }
     }
