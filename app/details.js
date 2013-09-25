@@ -16,9 +16,10 @@ var squirtDetails = (function () {
 
     function onDetailsPageInit(event) {
         // refresh handler
-        $("#details-refresh-button").click(onDetailsRefresh);
         $("#details-prev-button").click(onDetailsPrev);
         $("#details-next-button").click(onDetailsNext);
+        $("#details-play-button").click(onDetailsPlay);
+        $("#details-refresh-button").click(onDetailsRefresh);
 
         // table row selection handler
         $("#data-table").on('click', 'tr', onDataTableRowClick);
@@ -48,6 +49,27 @@ var squirtDetails = (function () {
             updateCurrentIndexDetails()
         }
     }
+
+    function onDetailsPlay() {
+        if (currentItem == null || currentItem.runs < 2) {
+            return;
+        }
+
+        // start
+        currentRunid = 1;
+        updatePhotoOnTimer();
+    }
+
+    function updatePhotoOnTimer() {
+        updatePhotoSection();
+
+        if (currentRunid < currentItem.runs) {
+            currentRunid++;
+            setTimeout(updatePhotoOnTimer, 1000);
+        }
+    }
+
+
 
     function onDataTableRowClick(event) {
         event.preventDefault();
