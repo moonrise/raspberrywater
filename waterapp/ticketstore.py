@@ -168,13 +168,15 @@ class OnUpload(blobstore_handlers.BlobstoreUploadHandler):
                 blobInfo.delete()
         else:               # multi data instance
             runid = int(self.request.headers['runid'])
-            # measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID))\
-            #                 .filter(Measure.ticket == ticketNo).filter(Measure.runid, runid)
-            measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).filter(Measure.ticket == ticketNo)
+            measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID))\
+                .filter(Measure.ticket == ticketNo).filter(Measure.runid == runid)
+
+            # todo: a better way of getting the single result?
+            # todo: like this: measure = measureQuery.fetch(1)[0]? but did not work?!!
             measure = None
             for m in measureQuery:
                 measure = m
-            # measure = measureQuery.fetch(1)[0]
+
             if measure:
                 measure.imageBlobKey = blobInfo.key()
                 measure.imageBlobURL = images.get_serving_url(measure.imageBlobKey)
