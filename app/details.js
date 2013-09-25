@@ -3,9 +3,15 @@
  */
 
 var squirtDetails = (function () {
+    const formatter = "<span style='font-weight: lighter;'>%s<span style='color: #7de0c2'>%s</span></span>";
+
+    var currentTicket;          // fixed based on the page URL
+
     var historyItems;
-    var currentIndex = -1;
-    var currentTicket;
+    var currentIndex = -1;      // varies as user navigates
+
+    var currentDataItems
+    var currentRunid = -1;
 
 
     function onDetailsPageInit(event) {
@@ -13,6 +19,9 @@ var squirtDetails = (function () {
         $("#details-refresh-button").click(onDetailsRefresh);
         $("#details-prev-button").click(onDetailsPrev);
         $("#details-next-button").click(onDetailsNext);
+
+        // table row selection handler
+        $("#data-table").on('click', 'tr', onDataTableRowClick);
 
         currentTicket = $(this).data("url").replace(/.*ticket=/, "");
         currentIndex = -1;
@@ -38,6 +47,21 @@ var squirtDetails = (function () {
             updateButtonStates();
             updateCurrentIndexDetails()
         }
+    }
+
+    function onDataTableRowClick(event) {
+        event.preventDefault();
+
+        // it is assumed that the runid is the text from the first column
+        currentRunid = parseInt(this.innerText);
+        updateRunId();
+    }
+
+    function updateRunId() {
+        if (currentItem != null && (currentRunid < 1 || currentRunid > currentItem.runs)) {
+            currentRunid = 1;
+        }
+        updatePhotoSection();
     }
 
     function updateButtonStates() {
@@ -85,16 +109,15 @@ var squirtDetails = (function () {
     }
 
     function updateCurrentIndexDetails() {
-        var historyItem = historyItems[currentIndex];
-        updateDetailsSection(historyItem);
-        updateDataTableSection(historyItem);
+        currentItem = historyItems[currentIndex];
+        updateDetailsSection(currentItem);
+        updateDataTableSection(currentItem);
     }
 
     function updateDetailsSection(item) {
         // update title area
-        var formatter = "details <span style='color: ivory'><i>(total tickets: %d)</i></span>";
-        var htmlTitle = sprintf(formatter,  historyItems.length);
-        $("#details-bar .ui-btn-text").html(htmlTitle); // $(#details-bar).html() destroys the style
+        var detailsHeader = sprintf(formatter, "details", sprintf(" (%d tickets fetched)", historyItems.length));
+        $("#details-bar .ui-btn-text").html(detailsHeader); // $(#details-bar).html() destroys the style
 
         // update detail area
         $("#details-request-items").html(
@@ -106,22 +129,51 @@ var squirtDetails = (function () {
         $("#details-delivery-time").text(squirtCommon.formatDate(item.deliveryDate));
         $("#details-delivery-stat").html(squirtCommon.getDeliveryStatHtml(item, 16));
         $("#details-delivery-note").html(squirtCommon.getDeliveryNoteHtml(item, 16));
+    }
 
-        // debug-only
-        $("#details-blob-key").text(item.imageBlobKey);
-        $("#details-blob-url").text(item.imageBlobURL);
+    function updatePhotoSection() {
+        var photoHeader = sprintf(formatter, "photo", sprintf(" - %d", currentRunid));
+        var debugHeader = sprintf(formatter, "photo debug", sprintf(" - %d", currentRunid));
+        $("#photo-details-bar .ui-btn-text").html(photoHeader);
+        $("#debug-details-bar .ui-btn-text").html(debugHeader);
 
-        // update image area
-        if (item.imageBlobURL && !String(item.imageBlobURL).match(/None$/)) {
-            $("#details-image").attr('src', item.imageBlobURL);
-            $("#details-image").attr('alt', item.imageBlobURL);
-        }
-        else {
+        if (currentItem == null || (currentItem.runs > 1 && currentDataItems == null)) {
+            $("#details-blob-key").text("none");
+            $("#details-blob-url").text("none");
             displayNoImageAvailable();
+            return;
         }
+
+        var imageBlobKey = null;
+        var imageBlobURL = null;
+        if (currentItem.runs == 1) {
+            imageBlobKey = currentItem.imageBlobKey;
+            imageBlobURL = currentItem.imageBlobURL;
+        }
+        else if (currentRunid >= 1 && currentRunid <= currentItem.runs) {
+            var index = parseInt(currentRunid) - 1;
+            imageBlobKey = currentDataItems[index].imageBlobKey;
+            imageBlobURL = currentDataItems[index].imageBlobURL;
+        }
+
+        // debug-only, so first show the url link text
+        $("#details-blob-key").text(imageBlobKey);
+        $("#details-blob-url").text(imageBlobURL);
+
+        if (imageBlobURL == null || String(imageBlobURL).match(/None$/)) {
+            displayNoImageAvailable();
+            return;
+        }
+
+        // update image
+        $("#details-image").attr('src', imageBlobURL);
+        $("#details-image").attr('alt', imageBlobURL);
     }
 
     function updateDataTableSection(historyItem) {
+        var tableHeader = sprintf(formatter, "data", sprintf(" (%d runs)", historyItem.runs));
+        $("#measure-details-bar .ui-btn-text").html(tableHeader);
+
         if (historyItem.runs == 1) {
             historyItem.runid = 1;        // simply add runid since it is missing!
             onTableDataReady([historyItem]);
@@ -139,8 +191,10 @@ var squirtDetails = (function () {
     }
 
     function onTableDataReady(dataItems) {
+        currentDataItems = dataItems
         $("#table-body").html(buildTableRows(dataItems));
         $("#data-table").table('refresh');
+        updateRunId();
     }
 
     function buildTableRows(dataItems) {

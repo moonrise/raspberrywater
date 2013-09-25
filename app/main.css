@@ -94,6 +94,11 @@ table {
     font-size: 14px;
 }
 
+table tbody tr:hover{
+    background-color: #ffdb67;
+    cursor: pointer;
+}
+
 .red-border {
     border: solid;
     border-color: red;

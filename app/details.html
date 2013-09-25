@@ -64,34 +64,34 @@
             </div>
         </div>
 
+        <div id="photo-details-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
+             data-collapsed="false" data-corners="false" style="margin-top:20px;">
+            <legend>photo</legend>
+            <div style="padding: 5px;padding-bottom: 2px;overflow: hidden">
+                <image id="details-image"/>
+            </div>
+        </div>
+
         <div id="measure-details-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
              data-collapsed="false" data-corners="false" style="margin-top:20px;">
             <legend>data</legend>
             <table id="data-table" data-role="table" data-mode="columntoggle"
                    class="ui-body-e ui-shadow table-stripe ui-responsive">
                 <thead>
-                    <tr>
-                        <th>id</th>
-                        <th>temperature</th>
-                        <th>moisture</th>
-                        <th></th>
-                    </tr>
+                <tr>
+                    <th>id</th>
+                    <th>temperature</th>
+                    <th>moisture</th>
+                    <th></th>
+                </tr>
                 </thead>
                 <tbody id="table-body"/>
             </table>
         </div>
 
-        <div id="photo-details-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
-             data-collapsed="false" data-corners="false" style="margin-top:20px;">
-            <legend>photo details</legend>
-            <div style="padding: 5px;padding-bottom: 2px;overflow: hidden">
-                <image id="details-image"/>
-            </div>
-        </div>
-
-        <div id="details-debug-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
-             data-collapsed="true" data-corners="false" style="margin-top:20px">
-            <legend>debug</legend>
+        <div id="debug-details-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
+             data-collapsed="true" data-corners="false" style="margin-top:20px;visibility: visible">
+            <legend>photo debug</legend>
             <div class="section-line-item-bottom-bordered-compact">
                 <div class="section-line-header">image key:</div>
                 <p id="details-blob-key" class="section-line-value"/>
