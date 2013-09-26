@@ -235,8 +235,21 @@ var squirtDetails = (function () {
         $.each(dataItems, function(index, item) {
             var e = ['<tr>'];
             e.push(sprintf('<th>%d</th>', item.runid));
-            e.push(sprintf('<td>%dF (%d)</td>', toFahrenheit(item.temperature), item.temperature));
-            e.push(sprintf('<td>%d% (%d)</td>', toMoisturePercent(item.moisture), item.moisture));
+
+            if (item.temperature < 0) {
+                e.push('<td>-na-</td>');
+            }
+            else {
+                e.push(sprintf('<td>%dF (%d)</td>', toFahrenheit(item.temperature), item.temperature));
+            }
+
+            if (item.moisture < 0) {
+                e.push('<td>-na-</td>');
+            }
+            else {
+                e.push(sprintf('<td>%d% (%d)</td>', toMoisturePercent(item.moisture), item.moisture));
+            }
+
             e.push(sprintf('<td>%s&nbsp;</td>',
                             item.imageBlobURL == "None" ? "" : squirtCommon.getPhotoImage(12)));
             e.push('</tr>');

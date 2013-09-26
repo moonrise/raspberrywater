@@ -272,11 +272,16 @@ var squirtMain = (function () {
     }
 
     function onSimulateSquirtDelivery() {
-        $.ajax(squirtCommon.buildJsonAPIRequest("confirmSquirtDelivery",
+        $.ajax(squirtCommon.buildJsonAPIRequest("confirmDelivery",
             {
                 ticket: parseInt($("#request-items").text()),   // get the first numeric digits only
+                runs: ds.runs.getValue(),
+                runid: 1,
+                temperature: 199,
+                moisture: 299,
+                finished: '1',
                 deliveryDate: squirtCommon.getMilliSinceEpoch().toString(),
-                deliveryNote: isRequestPending ? "empty simulated delivery" : "simulated delivery"
+                deliveryNote: isRequestPending ? "simulated delivery" : "empty simulated delivery"
             },
             null, null, onSimulateSquirtDeliveryDone));
     }
