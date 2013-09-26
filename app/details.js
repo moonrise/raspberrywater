@@ -219,14 +219,24 @@ var squirtDetails = (function () {
         updateRunId();
     }
 
+    function toFahrenheit(count) {
+        var milliVolts = count * (3300.0 / 1023.0);
+        var celsius = ((milliVolts - 100.0) / 10.0) - 40.0;
+        return (celsius * 9.0/5.0) + 32.0;
+    }
+
+    function toMoisturePercent(count) {
+        return Math.min(100, count/800 * 100);  // 800 is saturation point (submerged in water)
+    }
+
     function buildTableRows(dataItems) {
         var htmlItems = [];
 
         $.each(dataItems, function(index, item) {
             var e = ['<tr>'];
             e.push(sprintf('<th>%d</th>', item.runid));
-            e.push(sprintf('<td>%d</td>', item.temperature));
-            e.push(sprintf('<td>%d</td>', item.moisture));
+            e.push(sprintf('<td>%dF (%d)</td>', toFahrenheit(item.temperature), item.temperature));
+            e.push(sprintf('<td>%d% (%d)</td>', toMoisturePercent(item.moisture), item.moisture));
             e.push(sprintf('<td>%s&nbsp;</td>',
                             item.imageBlobURL == "None" ? "" : squirtCommon.getPhotoImage(12)));
             e.push('</tr>');

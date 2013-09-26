@@ -38,7 +38,7 @@ var ds = (function() {
 
 
     var photo = (function() {
-        const defaultValue = false;
+        const defaultValue = true;
         const titleFormatter = "take photo?: <span style='font-weight: bold; color: blue'><i>%s</i></span>";
 
         var currentValue = defaultValue;
@@ -118,7 +118,7 @@ var ds = (function() {
     var interval = (function() {
         // unit values are s, m, h, d for second, minute, hour and day
         const defaultValue = 1;
-        const defaultUnit = "d";
+        const defaultUnit = "m";
         const titleFormatter = "with the interval of <span style='font-weight: bold; color: blue'><i>%s</i></span>";
 
         var currentValue = defaultValue;
