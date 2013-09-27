@@ -28,8 +28,12 @@ var squirtCommon = (function () {
         };
     }
 
+    function fetchActiveTaskList(onOK, onNotOK, onDone) {
+        $.ajax(buildJsonAPIRequest("fetchActiveTaskList", {}, onOK, onNotOK, onDone));
+    }
+
     function fetchHistoryList(topN, onOK, onNotOK, onDone) {
-        $.ajax(buildJsonAPIRequest("fetchHistoryList", {}, onOK, onNotOK, onDone));
+        $.ajax(buildJsonAPIRequest("fetchHistoryList", { 'topN':topN }, onOK, onNotOK, onDone));
     }
 
     function getMilliSinceEpoch() {
@@ -235,6 +239,7 @@ var squirtCommon = (function () {
         getMilliSinceEpoch: getMilliSinceEpoch,
 
         buildJsonAPIRequest: buildJsonAPIRequest,
+        fetchActiveTaskList: fetchActiveTaskList,
         fetchHistoryList: fetchHistoryList,
 
         formatRequestItemsHtml: formatRequestItemsHtml,

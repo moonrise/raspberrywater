@@ -1,0 +1,11 @@
+
+        <!--
+        <input id="start-date" type="date" data-role="datebox" data-options='{"mode":"datebox"}' z/>
+        <input id="start-time" type="date" data-role="datebox" data-options='{"mode":"timebox"}'/>
+        <input id="duration" type="date" data-role="datebox" data-options='{"mode":"durationbox"}'/>
+
+        <input type="number" data-clear-btn="true" pattern="[0-9]*"/>
+        <input type="datetime" data-clear-btn="true"/>
+        <input type="datetime-local" data-clear-btn="true"/>
+        <input type="time" data-clear-btn="true"/>
+        -->

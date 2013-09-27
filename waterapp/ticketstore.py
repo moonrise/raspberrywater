@@ -136,12 +136,14 @@ class JsonAPI(webapp2.RequestHandler):
             self.response.write(json.dumps(QueryChangeState()))
         elif command == "fetchPendingRequest":
             self.response.write(json.dumps(FetchPendingRequestStatus()))
+        elif command == "fetchActiveTaskList":
+            self.response.write(json.dumps(FetchActiveTaskList()))
+        elif command == "fetchHistoryList":
+            self.response.write(json.dumps(FetchHistoryList(jsonRequest)))
         elif command == "submitSquirtRequest":
             self.response.write(json.dumps(SubmitSquirtRequest(jsonRequest)))
         elif command == "confirmDelivery":
             self.response.write(json.dumps(ConfirmDelivery(jsonRequest)))
-        elif command == "fetchHistoryList":
-            self.response.write(json.dumps(FetchHistoryList()))
         elif command == "fetchMeasures":
             self.response.write(json.dumps(FetchMeasures(jsonRequest)))
         elif command == "procureUploadURL":
@@ -334,13 +336,27 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
     return delivery
 
 
-def FetchHistoryList():
-    deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).order(-Delivery.ticket)
-    deliveryHistoryList = deliveryHistoryQuery.fetch(15)
+def FetchActiveTaskList():
+    query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID))\
+        .filter(Delivery.finished == False).order(-Delivery.ticket)
+    return toJsonDeliveryList(query.fetch())
 
-    historyList = []
-    for delivery in deliveryHistoryList:
-        historyList.append({
+
+def FetchHistoryList(jsonRequest):
+    query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID))\
+        .order(-Delivery.ticket)
+
+    topN = jsonRequest['topN']
+    if topN <= 0:
+        return toJsonDeliveryList(query.fetch())    # return all rows
+    else:
+        return toJsonDeliveryList(query.fetch(topN))
+
+
+def toJsonDeliveryList(queryResults):
+    list = []
+    for delivery in queryResults:
+        list.append({
             'ticket': delivery.ticket,
             'drops': delivery.drops,
             'photo': delivery.photo,
@@ -361,8 +377,8 @@ def FetchHistoryList():
             'imageBlobURL': str(delivery.imageBlobURL),
         })
 
-    return {'length': historyList.__len__(),
-            'histories': historyList
+    return {'length': list.__len__(),
+            'histories': list
     }
 
 

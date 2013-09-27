@@ -75,6 +75,23 @@
     </div>
 
     <div data-role="content">
+        <div data-role="controlgroup" data-type="horizontal" data-mini="true">
+            <a id="refresh-button" data-role="button" data-icon="refresh" data-iconpos="left"
+               data-mini="true">refresh</a>
+        </div>
+
+        <div id="rpi-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
+             data-collapsed="true" data-corners="false" style="margin-top:20px">
+            <legend>raspberry pi</legend>
+            <div class="section-line-item-compact">
+                <div class="section-line-header">heart beat:</div>
+                <p id="rpi-heart-beat" class="section-line-value"/>
+            </div>
+
+            <a id="simulate-squirt-delivery-button" data-role="button" data-icon="gear" data-iconpos="right" data-mini="true"
+               data-theme="e" style="margin-top: 12px">simulate delivery</a>
+        </div>
+
         <div class="section-div">
             <div id="pending-request-section-header" class="section-header">pending request</div>
             <div class="section-line-item-bottom-bordered">
@@ -95,26 +112,8 @@
             </div>
         </div>
 
-        <div>
-            <a id="simulate-squirt-delivery-button" data-role="button" data-icon="gear" data-iconpos="right" data-mini="true"
-               data-theme="e" style="display: inline-block">simulate squirt delivery</a>
-            <a id="pending-request-refresh-button" data-role="button" data-icon="refresh" data-iconpos="right" data-mini="true"
-                    style="display: inline-block">refresh</a>
-        </div>
-
-        <!--
-        <input id="start-date" type="date" data-role="datebox" data-options='{"mode":"datebox"}' z/>
-        <input id="start-time" type="date" data-role="datebox" data-options='{"mode":"timebox"}'/>
-        <input id="duration" type="date" data-role="datebox" data-options='{"mode":"durationbox"}'/>
-
-        <input type="number" data-clear-btn="true" pattern="[0-9]*"/>
-        <input type="datetime" data-clear-btn="true"/>
-        <input type="datetime-local" data-clear-btn="true"/>
-        <input type="time" data-clear-btn="true"/>
-        -->
-
         <div data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
-             data-collapsed="false" data-corners="false" style="margin-top:20px;padding: 0px">
+             data-collapsed="true" data-corners="false" style="margin-top:20px;padding: 0px">
             <legend>new request</legend>
 
             <div data-role="collapsible-set" data-theme="e" data-content-theme="e" data-mini="true"
@@ -185,8 +184,14 @@
                data-icon="gear" data-iconpos="right" data-theme="e">submit request</a>
         </div>
 
-        <div id="history-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
+        <div id="active-task-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
              data-collapsed="false" data-corners="false" style="margin-top:20px">
+            <legend>active tasks</legend>
+            <ul id="active-task-list" data-role="listview" data-inset="false" data-theme="c"/>
+        </div>
+
+        <div id="history-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
+             data-collapsed="true" data-corners="false" style="margin-top:20px">
             <legend>history</legend>
             <ul id="history-list" data-role="listview" data-inset="false" data-theme="c"/>
         </div>

@@ -10,6 +10,7 @@
 var squirtMain = (function () {
     const DateFormat = "hh:mm:ss a, MM/DD";
     const UPDATE_INTERVAL = 1000;
+    const RefreshButtonText = "refresh";
 
     var isRequestPending = false;
     var remainingPollCount = 30;
@@ -31,10 +32,12 @@ var squirtMain = (function () {
         $("#simulate-squirt-delivery-button").click(onSimulateSquirtDelivery);
 
         // refresh handler
-        $("#pending-request-refresh-button").click(onPendingRequestStatusRefreshButton);
+        $("#refresh-button").click(onRefreshButton);
+        $("#refresh-button .ui-btn-text").html(RefreshButtonText);
 
         // list view click handler
-        $("#history-list").on('click', 'li a', navigateToHistoryDetailView);
+        $("#active-task-list").on('click', 'li a', navigateToDetailsView);
+        $("#history-list").on('click', 'li a', navigateToDetailsView);
 
         initRequestParameters();
     }
@@ -175,6 +178,7 @@ var squirtMain = (function () {
         var historyListCid = jsonResponse.historyListCid;
         if (historyListCid != myHistoryListCid) {
             myHistoryListCid = historyListCid;
+            squirtCommon.fetchActiveTaskList(onFetchActiveTaskListOK);
             squirtCommon.fetchHistoryList(10, onFetchHistoryListOK);
         }
     }
@@ -185,6 +189,15 @@ var squirtMain = (function () {
 
     function onQueryChangeStateDone(xhr, status) {
         updatePendingRequestStatusHeader();
+
+        if (remainingPollCount > 0) {
+            var formatter = "%s <span style='font-weight: lighter; color: darkblue'><i>(%d)</i></span>";
+            var text = sprintf(formatter, RefreshButtonText, remainingPollCount);
+            $("#refresh-button .ui-btn-text").html(text);
+        }
+        else {
+            $("#refresh-button .ui-btn-text").html(RefreshButtonText);
+        }
     }
 
     function onFetchPendingRequestStatusOK(jsonResponse) {
@@ -204,6 +217,18 @@ var squirtMain = (function () {
         }
     }
 
+    function onFetchActiveTaskListOK(jsonResponse) {
+        // title area
+        var formatter = "active tasks <span style='font-weight: lighter; color: #7de0c2'><i> - %d</i></span>";
+        var htmlTitle = sprintf(formatter,  jsonResponse.length);
+        $("#active-task-bar .ui-btn-text").html(htmlTitle); // $(#history-bar).html() destroys the style
+
+        // actual list
+        var liItems = buildDeliveryList(jsonResponse.histories);
+        $("#active-task-list").html(liItems);
+        $("#active-task-list").listview('refresh');
+    }
+
     function onFetchHistoryListOK(jsonResponse) {
         // title area
         var formatter = "history <span style='font-weight: lighter; color: #7de0c2'><i> - most recent %d</i></span>";
@@ -211,12 +236,12 @@ var squirtMain = (function () {
         $("#history-bar .ui-btn-text").html(htmlTitle); // $(#history-bar).html() destroys the style
 
         // actual list
-        var liItems = buildHistoryList(jsonResponse.histories);
+        var liItems = buildDeliveryList(jsonResponse.histories);
         $("#history-list").html(liItems);
         $("#history-list").listview('refresh');
     }
 
-    function buildHistoryList(items) {
+    function buildDeliveryList(items) {
         const images = 20;
         var htmlItems = [];
 
@@ -284,7 +309,7 @@ var squirtMain = (function () {
         activateTransientPolling();
     }
 
-    function onPendingRequestStatusRefreshButton() {
+    function onRefreshButton() {
         updateRemoteState();
         activateTransientPolling();
     }
@@ -309,7 +334,7 @@ var squirtMain = (function () {
         activateTransientPolling();
     }
 
-    function navigateToHistoryDetailView(event) {
+    function navigateToDetailsView(event) {
         event.preventDefault();
         $.mobile.changePage('details.html', {
             transition:"slide",

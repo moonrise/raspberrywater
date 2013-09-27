@@ -65,7 +65,7 @@ var squirtDetails = (function () {
 
         if (currentRunid < currentItem.runsFinished) {
             currentRunid++;
-            setTimeout(updatePhotoOnTimer, 1000);
+            setTimeout(updatePhotoOnTimer, 500);
         }
     }
 
