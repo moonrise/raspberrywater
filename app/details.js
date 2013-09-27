@@ -51,7 +51,7 @@ var squirtDetails = (function () {
     }
 
     function onDetailsPlay() {
-        if (currentItem == null || currentItem.runs < 2) {
+        if (currentItem == null || currentItem.runsFinished < 2) {
             return;
         }
 
@@ -63,7 +63,7 @@ var squirtDetails = (function () {
     function updatePhotoOnTimer() {
         updatePhotoSection();
 
-        if (currentRunid < currentItem.runs) {
+        if (currentRunid < currentItem.runsFinished) {
             currentRunid++;
             setTimeout(updatePhotoOnTimer, 1000);
         }
@@ -154,8 +154,8 @@ var squirtDetails = (function () {
     }
 
     function updatePhotoSection() {
-        var photoHeader = sprintf(formatter, "photo", sprintf(" - %d", currentRunid));
-        var debugHeader = sprintf(formatter, "photo debug", sprintf(" - %d", currentRunid));
+        var photoHeader = sprintf(formatter, "photo", sprintf(" - %d/%d", currentRunid, currentItem.runsFinished));
+        var debugHeader = sprintf(formatter, "photo debug", sprintf(" - %d/%d", currentRunid, currentItem.runsFinished));
         $("#photo-details-bar .ui-btn-text").html(photoHeader);
         $("#debug-details-bar .ui-btn-text").html(debugHeader);
 
@@ -193,7 +193,7 @@ var squirtDetails = (function () {
     }
 
     function updateDataTableSection(historyItem) {
-        var tableHeader = sprintf(formatter, "data", sprintf(" (%d runs)", historyItem.runs));
+        var tableHeader = sprintf(formatter, "data", sprintf(" (%d runs)", historyItem.runsFinished));
         $("#measure-details-bar .ui-btn-text").html(tableHeader);
 
         if (historyItem.runs == 1) {

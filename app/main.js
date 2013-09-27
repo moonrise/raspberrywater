@@ -118,10 +118,28 @@ var squirtMain = (function () {
         // start time
         //
         $("#start-header .ui-btn-text").html(ds.start.getTitleHtml());
+        $("#start-time").trigger('datebox', {'method':'set', 'value':ds.start.getTimeString()});
+        $("#start-date").trigger('datebox', {'method':'set', 'value':ds.start.getDateString()});
 
         $("#start-select input[type='radio']").on('change', function(event) {
             ds.start.setNow(event.target.value);
             $("#start-header .ui-btn-text").html(ds.start.getTitleHtml());
+        });
+
+        $("#start-time").bind('datebox', function(event, passed) {
+            if (passed.method == 'set') {
+                event.stopImmediatePropagation();
+                ds.start.setTimeString(passed.value);
+                $("#start-header .ui-btn-text").html(ds.start.getTitleHtml());
+            }
+        });
+
+        $("#start-date").bind('datebox', function(event, passed) {
+            if (passed.method == 'set') {
+                event.stopImmediatePropagation();
+                ds.start.setDateString(passed.value);
+                $("#start-header .ui-btn-text").html(ds.start.getTitleHtml());
+            }
         });
     }
 
@@ -214,7 +232,7 @@ var squirtMain = (function () {
             e.push(sprintf('<p>request run: %s</p>', squirtCommon.formatRequestRunHtml(item)));
             e.push(sprintf('<p>%s <image src="images2/arrow-right.png" height=10/> %s</p>',
                             squirtCommon.formatDateShort(item.requestDate), squirtCommon.formatDateShort(item.deliveryDate)));
-            e.push(sprintf('<p>delivery note: %s</p>', squirtCommon.getDeliveryStatusHtml(item, 12)));
+            e.push(sprintf('<p>delivery: %s</p>', squirtCommon.getDeliveryStatusHtml(item, 12)));
             e.push('</a></li>');
 
             htmlItems.push(e.join(''));

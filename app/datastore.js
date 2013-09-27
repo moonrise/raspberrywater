@@ -149,17 +149,27 @@ var ds = (function() {
 
 
     var start = (function() {
+        const timeFormat = "hh:mm A";
+        const dateFormat = "MM/DD/YYYY";
+        const timeDateFormat = timeFormat + " " + dateFormat
+
         const defaultNowValue = true;
         const titleFormatter = "starting <span style='font-weight: bold; color: blue'><i>%s</i></span>";
 
         var currentNowValue = defaultNowValue;
         var time = squirtCommon.getMilliSinceEpoch() + 60*60*1000;  // one hour later by default
-        time = squirtCommon.getMilliSinceEpoch() + 90*1000;  // shorter delay for debug
-        var dateString = 0;
-        var timeString = 0;
+
+        var timeString = "";
+        var dateString = "";
+        updateDateTimeStrings();
 
         function getTime() {   // -1 ==> immediately
             return currentNowValue ? -1 : time;
+        }
+
+        function updateDateTimeStrings() {
+            timeString = moment(time).format(timeFormat);
+            dateString = moment(time).format(dateFormat);
         }
 
         return {
@@ -173,8 +183,27 @@ var ds = (function() {
                 currentNowValue = value != "0";
             },
 
+            setTime: function(value) {
+                time = value;
+                updateDateTimeStrings();
+            },
+
+            getTimeString: function() {
+                return timeString;
+            },
+
+            setTimeString: function(value) {
+                timeString = value;
+                time = moment(value + " " + dateString, timeDateFormat).valueOf();
+            },
+
+            getDateString: function() {
+                return dateString;
+            },
+
             setDateString: function(value) {
                 dateString = value;
+                time = moment(timeString + " " + value, timeDateFormat).valueOf();
             }
         }
     })();

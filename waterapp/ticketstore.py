@@ -336,7 +336,7 @@ def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
 
 def FetchHistoryList():
     deliveryHistoryQuery = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).order(-Delivery.ticket)
-    deliveryHistoryList = deliveryHistoryQuery.fetch(5)
+    deliveryHistoryList = deliveryHistoryQuery.fetch(15)
 
     historyList = []
     for delivery in deliveryHistoryList:
@@ -351,7 +351,7 @@ def FetchHistoryList():
             'start': delivery.start,
             'requestNote': delivery.requestNote,
             'requestDate': delivery.requestDate,
-            'runsFinished': delivery.runsFinished,
+            'runsFinished': delivery.runsFinished if delivery.runsFinished is not None else 0,
             'finished': delivery.finished,
             'deliveryDate': delivery.deliveryDate,
             'deliveryNote': delivery.deliveryNote,
