@@ -1,114 +1,44 @@
-import cgi
 import sys
 import math
 import time
 import json
 import requests
-import datetime
-import RPi.GPIO as GPIO
-from SimpleCV import Display, Camera, VideoStream, Image, DrawingLayer, Color
-from time import sleep
+
+# import hydroid_device as hd
+import hydroid_device_nil as hd
 
 
 API_URL = 'http://waterthem.appspot.com/app/jsonApi'
 #API_URL = 'http://localhost:8080/app/jsonApi'
 #API_URL = 'http://192.168.2.110:8080/app/jsonApi'
 
-# port constants
-PO_SOLENOID = 18
-PI_BUTTON = 24
-PO_BLINKER = 25
-
-# MCP3008 ports
-PI_DIN = 23
-PO_CLK = 4
-PO_DOUT = 17
-PO_CS = 22
-
-# MCP3008 analog channels (8 channels available between 0 and 7)
-AC_TEMPERATURE = 0
-AC_MOISTURE = 7
-
-# other constants - this should be dropped and moved to the client app (JavaScript)
-SATURATION = 777.0    # Grove moisture sensor registers about 777 count in water
-
-# internal button control
-lastButtonValue = False
-
-# solenoid control
 MAX_SQUIRTS = 5
-squirtQueue = 0        # number of squirts pending
-solenoidHigh = False
 
 # web requests
 listenToWeb = False
 ticketNo = 0
-
-# camera
-camera = None
-display = None
-IMAGE_WIDTH = 320
-IMAGE_HEIGHT = 240
 
 cronQueue = {}
 cronActive = {}
 cronFinished = {}
 
 
-def setupGPIOPorts():
-    GPIO.setmode(GPIO.BCM)   # not GPIO.BOARD which is sequential numbering system
-
-    GPIO.setup(PI_BUTTON, GPIO.IN)
-    GPIO.setup(PO_SOLENOID, GPIO.OUT)
-    GPIO.setup(PO_BLINKER, GPIO.OUT)
-
-    GPIO.setup(PI_DIN, GPIO.IN)
-    GPIO.setup(PO_CLK, GPIO.OUT)
-    GPIO.setup(PO_DOUT, GPIO.OUT)
-    GPIO.setup(PO_CS, GPIO.OUT)
+def getMilliSinceEpoch():
+    return int(time.time() * 1000)
 
 
-def cleanup():
-    print "cleaning up and exiting..."
-    GPIO.output(PO_SOLENOID, GPIO.LOW)
-    GPIO.output(PO_BLINKER, GPIO.LOW)
+def getIntervalMilliForUnit(unit):
+    if unit == 'm':
+        return 60*1000
+    elif unit == 'h':
+        return 60*60*1000
+    elif unit == 'd':
+        return 24*60*60*1000
+    return 1000     # assume 's' (second)
 
 
-# read SPI data from MCP3008 chip, 8 possible adc's (0 thru 7)
-def readadc(adcnum):
-    if ((adcnum > 7) or (adcnum < 0)):
-        return -1
-
-    GPIO.output(PO_CS, True)
-    GPIO.output(PO_CLK, False) # start clock low
-    GPIO.output(PO_CS, False) # bring CS low
-
-    commandout = adcnum
-    commandout |= 0x18 # start bit + single-ended bit
-    commandout <<= 3 # we only need to send 5 bits here
-
-    for i in range(5):
-        if (commandout & 0x80):
-            GPIO.output(PO_DOUT, True)
-        else:
-            GPIO.output(PO_DOUT, False)
-        commandout <<= 1
-        GPIO.output(PO_CLK, True)
-        GPIO.output(PO_CLK, False)
-
-    adcout = 0
-    # read in one empty bit, one null bit and 10 ADC bits
-    for i in range(12):
-        GPIO.output(PO_CLK, True)
-        GPIO.output(PO_CLK, False)
-        adcout <<= 1
-        if (GPIO.input(PI_DIN)):
-            adcout |= 0x1
-
-    GPIO.output(PO_CS, True)
-
-    adcout /= 2 # first bit is 'null' so drop it
-    return adcout
+def onRpiButtonPress():
+    queueSquirt(0, 1)
 
 
 def queueSquirt(ticket, drops):
@@ -118,47 +48,6 @@ def queueSquirt(ticket, drops):
         squirtQueue = min(math.fabs(drops), MAX_SQUIRTS)
         ticketNo = ticket
         print "squirt qeued for ticket %d with %d drops" % (ticketNo, squirtQueue)
-
-
-def setupCamera():
-    global camera, display
-    width = IMAGE_WIDTH
-    height = IMAGE_HEIGHT
-    camera = Camera(prop_set={'width':width, 'height':height})
-    display = Display(resolution=(320, 240))
-
-
-def takeSnapshot(fileName):
-    if not camera:
-        return
-
-    frame = camera.getImage()
-    if display:
-        frame.save(display)
-    frame.save(fileName)
-
-
-def addText(fileName, text):
-    image = Image(fileName)
-    draw = DrawingLayer((IMAGE_WIDTH, IMAGE_HEIGHT))
-    draw.rectangle((8, 8), (121, 18), filled=True, color=Color.YELLOW)
-    draw.setFontSize(20)
-    draw.text(text, (10, 9), color=Color.BLUE)
-    image.addDrawingLayer(draw)
-    image.save(fileName)
-
-
-def takePhoto(ticket, runid):
-    fileName = 'hydroid-%d-%d.jpg' % (ticket, runid)
-    takeSnapshot(fileName)
-
-    timeText = datetime.datetime.now().strftime("%H:%M:%S %m/%d/%Y")
-    addText(fileName, timeText)
-    return fileName
-
-
-def getMilliSinceEpoch():
-    return int(time.time() * 1000)
 
 
 def handleCommError(message):
@@ -199,19 +88,15 @@ def fireJsonApi(command, parameters):
 
 
 def pollServer():
-    response = fireJsonApi('fetchPendingRequest', {})
-    if response and response['requestDate'] > 0:
-        handleServerJob(response)
+    try:
+        response = fireJsonApi('fetchActiveTaskList', {})
+        if not response or response['length'] <= 0:
+            return      # no active jobs
 
-
-def getIntervalMilliForUnit(unit):
-    if unit == 'm':
-        return 60*1000
-    elif unit == 'h':
-        return 60*60*1000
-    elif unit == 'd':
-        return 24*60*60*1000
-    return 1000     # assume 's' (second)
+        for job in response['list']:
+            handleServerJob(job)
+    except:
+        pass    # can't access the server? keep on trying forever - it may work again
 
 
 def handleServerJob(job):
@@ -362,45 +247,6 @@ def doTimedLoop(resolution=100):
         #     break
 
 
-def onRpiSystemTick(job, isLast):
-    global lastButtonValue, squirtQueue, solenoidHigh, ticketNo
-
-    tick = job.runid % 4
-    #print "------ rpi tick: %d" % tick
-
-    # process blinker
-    if tick == 0:
-        GPIO.output(PO_BLINKER, GPIO.HIGH)
-    elif tick == 3:
-        GPIO.output(PO_BLINKER, GPIO.LOW)
-
-    # process button
-    buttonValue = GPIO.input(PI_BUTTON)
-    if buttonValue != lastButtonValue:
-        lastButtonValue = buttonValue 
-        if (buttonValue == True):
-            print "Button pressed"
-            queueSquirt(0, 1)
-
-    # service squirting
-    if squirtQueue > 0:
-        if tick == 1 and not solenoidHigh:
-            print "====== solenoid (ticket:%d, drop:%d) ===========> Open" % (ticketNo, squirtQueue)
-            GPIO.output(PO_SOLENOID, GPIO.HIGH)
-            solenoidHigh = True
-        if tick == 2 and job.photo and job.runid == 1 and camera:   # take photo in the midstream
-            job.imageFileName = takePhoto(job.id, job.runid)
-        elif tick == 3 and solenoidHigh:
-            print "====== solenoid (ticket:%d, drop:%d) ===========> Close" % (ticketNo, squirtQueue)
-            GPIO.output(PO_SOLENOID, GPIO.LOW)
-            solenoidHigh = False
-            squirtQueue -= 1
-
-            # squirting done
-            if squirtQueue == 0 and ticketNo > 0:
-                ticketNo = 0
-
-
 def onServerPoll(job, isLast):
     pollServer()
 
@@ -410,11 +256,11 @@ def onUserTask(job, isLast):
           (job.id, job.runid, isLast, job.drops, job.photo, job.envread)
 
     if job.envread:
-        job.temperature = readadc(AC_TEMPERATURE)
-        job.moisture = readadc(AC_MOISTURE)
+        job.temperature = hd.readTemperature()
+        job.moisture = hd.readMoisture()
 
-    if job.photo and camera:
-        job.imageFileName = takePhoto(job.id, job.runid)
+    if job.photo and hd.isCameraReady():
+        job.imageFileName = hd.takePhoto(job.id, job.runid)
 
     if job.drops > 0:
         queueSquirt(job.id, job.drops)
@@ -465,33 +311,18 @@ def onDelivered(job, isLast):
         return
 
 
-def testADC():
-    while True:
-        tcount = readadc(AC_TEMPERATURE)
-        millivolts = tcount * (3300. / 1023.)
-        tempc = ((millivolts - 100.) / 10.) - 40.
-        tempf = (tempc * 9./5.) + 32
-
-        mcount = readadc(AC_MOISTURE)
-        moistp = min(100, mcount / 777. * 100)
-
-        print "temp: %dF, count: %d, mosit: %d%%, count: %d" % (tempf, tcount, moistp, mcount)
-        sleep(1)
-
-
 #
 # main
 #
 
 webProcessInterval = 5
 
-if (len(sys.argv) > 1 and sys.argv[1] == 'adc'):
+if len(sys.argv) > 1 and sys.argv[1] == 'adc':
     print "testing adc..."
-    setupGPIOPorts()
-    testADC()
+    hd.testADC()
     exit
 
-if (len(sys.argv) > 1):
+if len(sys.argv) > 1:
     webProcessInterval = int(sys.argv[1])
 
 if webProcessInterval > 0:
@@ -501,19 +332,20 @@ if webProcessInterval > 0:
 
 # report the listening mode
 if listenToWeb:
-    print "listening to web requests for every %d seconds" %  webProcessInterval
+    print "listening to web requests for every %d seconds" % webProcessInterval
 else:
     print "not listening to web requests, only internal requests are listened to"
 
 # hardware setup
-setupGPIOPorts()
-setupCamera()
+hd.setup(onRpiButtonPress)
 
 # system scheduler setup
-addJob(SystemJob(-1, 250, onRpiSystemTick))
+addJob(SystemJob(-1, 250, hd.onRpiSystemTick))
 if listenToWeb:
     addJob(SystemJob(-2, webProcessInterval*1000, onServerPoll))
 
 # enter the app loop
 doTimedLoop()
-cleanup();
+
+# hardware cleanup
+hd.cleanup()

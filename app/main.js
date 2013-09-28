@@ -194,7 +194,7 @@ var squirtMain = (function () {
         $("#active-task-bar .ui-btn-text").html(htmlTitle); // $(#history-bar).html() destroys the style
 
         // actual list
-        var liItems = buildDeliveryList(jsonResponse.histories);
+        var liItems = buildDeliveryList(jsonResponse.list);
         $("#active-task-list").html(liItems);
         $("#active-task-list").listview('refresh');
     }
@@ -206,7 +206,7 @@ var squirtMain = (function () {
         $("#history-bar .ui-btn-text").html(htmlTitle); // $(#history-bar).html() destroys the style
 
         // actual list
-        var liItems = buildDeliveryList(jsonResponse.histories);
+        var liItems = buildDeliveryList(jsonResponse.list);
         $("#history-list").html(liItems);
         $("#history-list").listview('refresh');
     }

@@ -8,8 +8,10 @@
       <w>darkblue</w>
       <w>datastore</w>
       <w>datebox</w>
+      <w>dout</w>
       <w>durationbox</w>
       <w>envread</w>
+      <w>gpio</w>
       <w>hrdstore</w>
       <w>hydroid</w>
       <w>intelli</w>

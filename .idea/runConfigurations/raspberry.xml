@@ -10,7 +10,7 @@
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
     <option name="launchJavascriptDebuger" value="false" />
     <option name="browserUrl" value="" />
-    <option name="additionalOptions" value="" />
+    <option name="additionalOptions" value="--host 192.168.2.110" />
     <RunnerSettings RunnerId="PyDebugRunner" />
     <RunnerSettings RunnerId="Run" />
     <ConfigurationWrapper RunnerId="PyDebugRunner" />

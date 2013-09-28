@@ -112,7 +112,7 @@ var squirtDetails = (function () {
 
     function onFetchAllListOK(jsonResponse) {
         // stash history items for later navigation
-        historyItems = jsonResponse.histories;
+        historyItems = jsonResponse.list;
 
         // locate the current index of the initial ticket
         if (currentIndex < 0) {

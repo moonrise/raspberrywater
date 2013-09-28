@@ -270,7 +270,7 @@ def ConfirmDelivery(jsonRequest):
             delivered.temperature = int(jsonRequest['temperature'])
             delivered.moisture = int(jsonRequest['moisture'])
         delivered.put()
-        DirtyHistoryList()
+        DirtyAllStates()
 
     # multi run data is stored in the measure db
     if runs > 1 and runid > 0:
@@ -336,7 +336,7 @@ def AddToHistory(hydroidUnitId, jsonRequest):
     return delivery
 
 
-def computeEndTime(delivery):
+def computeEndTime(delivery, startTime):
     interval = delivery.interval
     if delivery.intervalUnit == 'm':
         interval *= 60
@@ -344,7 +344,7 @@ def computeEndTime(delivery):
         interval *= 60*60
     elif delivery.intervalUnit == 'd':
         interval *= 60*60*24
-    return delivery.start + interval * delivery.runs * 1000
+    return startTime + interval * delivery.runs * 1000
 
 
 def InvalidateTimedOutJobs():
@@ -357,12 +357,12 @@ def InvalidateTimedOutJobs():
         if d.start > 0:
             if d.runs == 1 and d.start >= (now + 2000):  # give a few seconds of margin
                 continue
-            if d.runs > 1 and computeEndTime(d) > (now - 2000):  # give a few seconds of margin
+            if d.runs > 1 and computeEndTime(d, d.start) > (now - 2000):  # give a few seconds of margin
                 continue
         else:
             if d.runs == 1:     # once, immediate never times out
                 continue
-            if d.runs > 1 and computeEndTime(d) > (now - 2000):  # give a few seconds of margin
+            if d.runs > 1 and computeEndTime(d, now) > (now - 2000):  # give a few seconds of margin
                 continue
 
         # timed out job
@@ -428,7 +428,7 @@ def toJsonDeliveryList(queryResults):
         })
 
     return {'length': list.__len__(),
-            'histories': list
+            'list': list
     }
 
 
