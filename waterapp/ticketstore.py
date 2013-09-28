@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import time
 import cgi
 import urllib
 import webapp2
@@ -13,6 +14,11 @@ HYDROID_UNIT_ID = 'hydroid6'
 
 JOB_STATE_PENDING = "pending"
 JOB_STATE_BUMPED = "bumped"
+JOB_STATE_TIMEDOUT = "timed out"
+
+
+def getMilliSinceEpoch():
+    return int(time.time() * 1000)
 
 
 def GetHydroidUnitKey(hydroidUnitId=HYDROID_UNIT_ID):
@@ -349,15 +355,15 @@ def AddToHistory(hydroidUnitId, jsonRequest):
 
     # copy from source to target
     delivery.ticket = ticket.ticket
-    delivery.drops = jsonRequest['drops']
+    delivery.drops = int(jsonRequest['drops'])
     delivery.photo = jsonRequest['photo']
     delivery.envread = jsonRequest['envread']
-    delivery.runs = jsonRequest['runs']
-    delivery.interval = jsonRequest['interval']
+    delivery.runs = int(jsonRequest['runs'])
+    delivery.interval = int(jsonRequest['interval'])
     delivery.intervalUnit = jsonRequest['intervalUnit']
-    delivery.start = jsonRequest['start']
+    delivery.start = int(jsonRequest['start'])
     delivery.requestNote = jsonRequest['requestNote']
-    delivery.requestDate = jsonRequest['requestDate']
+    delivery.requestDate = int(jsonRequest['requestDate'])
     delivery.runsFinished = 0
     delivery.finished = False
     delivery.deliveryDate = -1
@@ -386,7 +392,45 @@ def AddToHistory(hydroidUnitId, jsonRequest):
     return delivery
 
 
+def computeEndTime(delivery):
+    interval = delivery.interval
+    if delivery.intervalUnit == 'm':
+        interval *= 60
+    elif delivery.intervalUnit == 'h':
+        interval *= 60*60
+    elif delivery.intervalUnit == 'd':
+        interval *= 60*60*24
+    return delivery.start + interval * delivery.runs * 1000
+
+
+def InvalidateTimedOutJobs():
+    # deactivate timed out jobs
+    query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)) \
+        .filter(Delivery.finished == False)
+
+    now = getMilliSinceEpoch()
+    for d in query.fetch():
+        if d.start > 0:
+            if d.runs == 1 and d.start >= (now + 2000):   # give a bit of break for starting time
+                continue
+            if d.runs > 1 and computeEndTime(d) > (now - 2000):
+                continue
+        else:
+            if d.runs == 1:     # once, immediate never times out
+                continue
+            if d.runs > 1 and computeEndTime(d) > (now - 2000):
+                continue
+
+        # timed out job
+        d.finished = True
+        d.deliveryNote = JOB_STATE_TIMEDOUT
+        d.put()
+        DirtyAllStates()
+
 def FetchActiveTaskList():
+    InvalidateTimedOutJobs()
+
+    # all invalids are filtered out now
     query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID))\
         .filter(Delivery.finished == False).order(-Delivery.ticket)
     return toJsonDeliveryList(query.fetch())
