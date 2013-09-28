@@ -143,8 +143,6 @@ class JsonAPI(webapp2.RequestHandler):
         command = jsonRequest['command']
         if command == "queryChangeState":
             self.response.write(json.dumps(QueryChangeState()))
-        # elif command == "fetchPendingRequest":
-        #     self.response.write(json.dumps(FetchPendingRequestStatus()))
         elif command == "fetchActiveTaskList":
             self.response.write(json.dumps(FetchActiveTaskList()))
         elif command == "fetchHistoryList":
@@ -231,21 +229,6 @@ def QueryChangeState():
     }
 
 
-# def FetchPendingRequestStatus():
-#     ticket = GetSingletonTicket()
-#     return {'ticket': ticket.ticket,
-#             'drops': ticket.drops,
-#             'photo': ticket.photo,
-#             'envread': ticket.envread,
-#             'runs': ticket.runs,
-#             'interval': ticket.interval,
-#             'intervalUnit': ticket.intervalUnit,
-#             'start': ticket.start,
-#             'requestDate': ticket.requestDate,
-#             'requestNote': ticket.requestNote
-#     }
-
-
 def SubmitSquirtRequest(jsonRequest):
     runs = jsonRequest['runs']
     start = jsonRequest['start']
@@ -266,41 +249,12 @@ def SubmitSquirtRequest(jsonRequest):
 
     # now submit the request by adding to the active list
     AddToHistory(HYDROID_UNIT_ID, jsonRequest)
-
-    # ticket = GetSingletonTicket()
-
-    # replace the pending request and move the old one to history
-    # if ticket.requestDate > 0 and not GetDeliveryItemInHistory(ticket.ticket, HYDROID_UNIT_ID):
-    #     MoveToHistory(HYDROID_UNIT_ID)
-
-    # new request
-    # ticket.drops = int(jsonRequest['drops'])
-    # ticket.photo = jsonRequest['photo']
-    # ticket.envread = jsonRequest['envread']
-    # ticket.runs = int(jsonRequest['runs'])
-    # ticket.interval = int(jsonRequest['interval'])
-    # ticket.intervalUnit = jsonRequest['intervalUnit']
-    # ticket.start = int(jsonRequest['start'])
-    # ticket.requestNote = jsonRequest['requestNote']
-    # ticket.requestDate = int(jsonRequest['requestDate'])
-    # ticket.pendingStateCid += 1
-    # ticket.put()
     return {}
 
 
 def ConfirmDelivery(jsonRequest):
     deliveredTicket = int(jsonRequest['ticket'])
-    # pendingTicket = GetSingletonTicket()
-
-    # the first run id --> we confirm delivery started
-    # if pendingTicket.requestDate > 0 and pendingTicket.ticket == deliveredTicket\
-    #     and not GetDeliveryItemInHistory(deliveredTicket, HYDROID_UNIT_ID):
-    #     MoveToHistory(HYDROID_UNIT_ID)
-
     runid = int(jsonRequest['runid'])
-    # if runid <= 0:
-    #     return {}
-
     runs = int(jsonRequest['runs'])
 
     # update the one in history
@@ -377,18 +331,6 @@ def AddToHistory(hydroidUnitId, jsonRequest):
     ticket.pendingStateCid += 1
     ticket.put()
 
-    # clear up source (the pending data) with the ticket incremented
-    # ticket.drops = 0
-    # ticket.photo = '0'
-    # ticket.envread = '0'
-    # ticket.runs = 0
-    # ticket.interval = 0
-    # ticket.intervalUnit = 'd'
-    # ticket.start = -1
-    # ticket.requestNote = ''
-    # ticket.requestDate = 0
-    # ticket.pendingStateCid += 1
-
     return delivery
 
 
@@ -411,14 +353,14 @@ def InvalidateTimedOutJobs():
     now = getMilliSinceEpoch()
     for d in query.fetch():
         if d.start > 0:
-            if d.runs == 1 and d.start >= (now + 2000):   # give a bit of break for starting time
+            if d.runs == 1 and d.start >= (now + 2000):  # give a few seconds of margin
                 continue
-            if d.runs > 1 and computeEndTime(d) > (now - 2000):
+            if d.runs > 1 and computeEndTime(d) > (now - 2000):  # give a few seconds of margin
                 continue
         else:
             if d.runs == 1:     # once, immediate never times out
                 continue
-            if d.runs > 1 and computeEndTime(d) > (now - 2000):
+            if d.runs > 1 and computeEndTime(d) > (now - 2000):  # give a few seconds of margin
                 continue
 
         # timed out job
@@ -426,6 +368,7 @@ def InvalidateTimedOutJobs():
         d.deliveryNote = JOB_STATE_TIMEDOUT
         d.put()
         DirtyAllStates()
+
 
 def FetchActiveTaskList():
     InvalidateTimedOutJobs()
@@ -502,7 +445,7 @@ def ProcureUploadURL():
 
 
 main = webapp2.WSGIApplication([
-                                   ('/app/jsonApi', JsonAPI),
-                                   ('/app/upload', OnUpload),
-                                   ('/app/view/([^/]+)?', OnView),
-                               ], debug=True)
+            ('/app/jsonApi', JsonAPI),
+            ('/app/upload', OnUpload),
+            ('/app/view/([^/]+)?', OnView),
+            ], debug=True)
