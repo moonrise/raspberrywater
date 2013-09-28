@@ -8,21 +8,17 @@
  */
 
 var squirtMain = (function () {
-    const DateFormat = "hh:mm:ss a, MM/DD";
     const UPDATE_INTERVAL = 1000;
     const RefreshButtonText = "refresh";
 
-    var isRequestPending = false;
     var remainingPollCount = 30;
-
-    var myPendingStateCid = -1;
+    var myActiveStateCid = -1;
     var myHistoryListCid = -1;
 
 
     function appBootstrap() {
+        // initial update followed by polled pending request update
         updateRemoteState();
-
-        // polled pending request update
         updateRemoteStateRepeatedly();
 
         // squirt request handler
@@ -163,33 +159,24 @@ var squirtMain = (function () {
 
     function updateRemoteState() {
         $.ajax(squirtCommon.buildJsonAPIRequest("queryChangeState", {},
-            onQueryChangeState,
-            onQueryChangeStateNotOK,
-            onQueryChangeStateDone));
+            onQueryChangeState, null, onQueryChangeStateDone));
     }
 
     function onQueryChangeState(jsonResponse) {
-        var pendingStateCid = jsonResponse.pendingStateCid;
-        if (pendingStateCid != myPendingStateCid) {
-            myPendingStateCid = pendingStateCid;
-            $.ajax(squirtCommon.buildJsonAPIRequest("fetchPendingRequest", {}, onFetchPendingRequestStatusOK));
+        var activeStateCid = jsonResponse.activeStateCid;
+        if (activeStateCid != myActiveStateCid) {
+            myActiveStateCid = activeStateCid;
+            squirtCommon.fetchActiveTaskList(onFetchActiveTaskListOK);
         }
 
         var historyListCid = jsonResponse.historyListCid;
         if (historyListCid != myHistoryListCid) {
             myHistoryListCid = historyListCid;
-            squirtCommon.fetchActiveTaskList(onFetchActiveTaskListOK);
             squirtCommon.fetchHistoryList(10, onFetchHistoryListOK);
         }
     }
 
-    function onQueryChangeStateNotOK(xhr, status) {
-        // general connection problem?
-    }
-
     function onQueryChangeStateDone(xhr, status) {
-        updatePendingRequestStatusHeader();
-
         if (remainingPollCount > 0) {
             var formatter = "%s <span style='font-weight: lighter; color: darkblue'><i>(%d)</i></span>";
             var text = sprintf(formatter, RefreshButtonText, remainingPollCount);
@@ -197,23 +184,6 @@ var squirtMain = (function () {
         }
         else {
             $("#refresh-button .ui-btn-text").html(RefreshButtonText);
-        }
-    }
-
-    function onFetchPendingRequestStatusOK(jsonResponse) {
-
-        $("#request-items").html(squirtCommon.formatRequestItemsHtml(jsonResponse, 14));
-        if (jsonResponse.requestDate > 0) {
-            isRequestPending = true;
-            $("#request-run").html(squirtCommon.formatRequestRunHtml(jsonResponse));
-            $("#request-time").text(squirtCommon.formatDate(jsonResponse.requestDate));
-            $("#request-note").text(jsonResponse.requestNote);
-        }
-        else {
-            isRequestPending = false;
-            $("#request-run").text("");
-            $("#request-time").text("");
-            $("#request-note").text("");
         }
     }
 
@@ -266,22 +236,9 @@ var squirtMain = (function () {
         return htmlItems.join('');
     }
 
-    function updatePendingRequestStatusHeader() {
-        var header = isRequestPending ? "pending request" : "no pending request";
-
-        if (remainingPollCount > 0) {
-            var formatter = "%s <span style='font-weight: lighter; color: #7de0c2'><i> - poll count %d</i></span>";
-            var htmlTitle = sprintf(formatter,  header, remainingPollCount);
-            header = htmlTitle;
-        }
-
-        $("#pending-request-section-header").html(header);
-    }
-
     function onSquirtRequest() {
         $.ajax(squirtCommon.buildJsonAPIRequest("submitSquirtRequest",
-            collectSquirtRequestParameters(),
-            onSquirtRequestOK, onSquirtRequestNotOK, onSquirtRequestDone));
+               collectSquirtRequestParameters(), null, null, onSquirtRequestDone));
     }
 
     function collectSquirtRequestParameters() {
@@ -294,14 +251,8 @@ var squirtMain = (function () {
             intervalUnit: ds.interval.getUnit(),
             start: ds.start.getTime(),
             requestNote: $("#note-input").val(),
-            requestDate: squirtCommon.getMilliSinceEpoch().toString()
+            requestDate: squirtCommon.getMilliSinceEpoch()
         }
-    }
-
-    function onSquirtRequestOK(jsonResponse) {
-    }
-
-    function onSquirtRequestNotOK(xhr, status) {
     }
 
     function onSquirtRequestDone(xhr, status) {

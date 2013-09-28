@@ -11,6 +11,9 @@ from google.appengine.ext.webapp import blobstore_handlers
 
 HYDROID_UNIT_ID = 'hydroid6'
 
+JOB_STATE_PENDING = "pending"
+JOB_STATE_BUMPED = "bumped"
+
 
 def GetHydroidUnitKey(hydroidUnitId=HYDROID_UNIT_ID):
     """Constructs a Datastore key for a hydroid unit instance id."""
@@ -36,7 +39,7 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
         ticket.intervalUnit = "d"
         ticket.start = 1
         ticket.requestNote = ''
-        ticket.pendingStateCid = 0  # pending state change id
+        ticket.pendingStateCid = 0  # pending state change id ==> change it activeStateCid
         ticket.historyListCid = 0   # history list change id
         ticket.put()
         singletonTicket = GetSingletonTicketKey(hydroidUnitId).get() # get it right back
@@ -134,8 +137,8 @@ class JsonAPI(webapp2.RequestHandler):
         command = jsonRequest['command']
         if command == "queryChangeState":
             self.response.write(json.dumps(QueryChangeState()))
-        elif command == "fetchPendingRequest":
-            self.response.write(json.dumps(FetchPendingRequestStatus()))
+        # elif command == "fetchPendingRequest":
+        #     self.response.write(json.dumps(FetchPendingRequestStatus()))
         elif command == "fetchActiveTaskList":
             self.response.write(json.dumps(FetchActiveTaskList()))
         elif command == "fetchHistoryList":
@@ -196,62 +199,101 @@ class OnView(blobstore_handlers.BlobstoreDownloadHandler):
             self.send_blob(resource)
 
 
+def DirtyActiveState():
+    ticket = GetSingletonTicket()
+    ticket.pendingStateCid += 1
+    ticket.put()
+
+
+def DirtyHistoryList():
+    ticket = GetSingletonTicket()
+    ticket.historyListCid += 1
+    ticket.put()
+
+
+def DirtyAllStates():
+    ticket = GetSingletonTicket()
+    ticket.pendingStateCid += 1
+    ticket.historyListCid += 1
+    ticket.put()
+
+
 def QueryChangeState():
     ticket = GetSingletonTicket()
-    return {'pendingStateCid': ticket.pendingStateCid,
+    return {'activeStateCid': ticket.pendingStateCid,
             'historyListCid': ticket.historyListCid,
     }
 
 
-def FetchPendingRequestStatus():
-    ticket = GetSingletonTicket()
-    return {'ticket': ticket.ticket,
-            'drops': ticket.drops,
-            'photo': ticket.photo,
-            'envread': ticket.envread,
-            'runs': ticket.runs,
-            'interval': ticket.interval,
-            'intervalUnit': ticket.intervalUnit,
-            'start': ticket.start,
-            'requestDate': ticket.requestDate,
-            'requestNote': ticket.requestNote
-    }
+# def FetchPendingRequestStatus():
+#     ticket = GetSingletonTicket()
+#     return {'ticket': ticket.ticket,
+#             'drops': ticket.drops,
+#             'photo': ticket.photo,
+#             'envread': ticket.envread,
+#             'runs': ticket.runs,
+#             'interval': ticket.interval,
+#             'intervalUnit': ticket.intervalUnit,
+#             'start': ticket.start,
+#             'requestDate': ticket.requestDate,
+#             'requestNote': ticket.requestNote
+#     }
 
 
 def SubmitSquirtRequest(jsonRequest):
-    ticket = GetSingletonTicket()
+    runs = jsonRequest['runs']
+    start = jsonRequest['start']
+
+    # you can have only one of single immediate run at any time
+    if runs == 1 and start <= 0:
+        query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)) \
+            .filter(Delivery.finished == False) \
+            .filter(Delivery.runs == 1)\
+            .filter(Delivery.start < 1)
+
+        for d in query.fetch():
+            d.finished = True
+            d.deliveryNote = JOB_STATE_BUMPED
+            d.put()
+
+        DirtyAllStates()
+
+    # now submit the request by adding to the active list
+    AddToHistory(HYDROID_UNIT_ID, jsonRequest)
+
+    # ticket = GetSingletonTicket()
 
     # replace the pending request and move the old one to history
-    if ticket.requestDate > 0 and not GetDeliveryItemInHistory(ticket.ticket, HYDROID_UNIT_ID):
-        MoveToHistory(HYDROID_UNIT_ID)
+    # if ticket.requestDate > 0 and not GetDeliveryItemInHistory(ticket.ticket, HYDROID_UNIT_ID):
+    #     MoveToHistory(HYDROID_UNIT_ID)
 
     # new request
-    ticket.drops = int(jsonRequest['drops'])
-    ticket.photo = jsonRequest['photo']
-    ticket.envread = jsonRequest['envread']
-    ticket.runs = int(jsonRequest['runs'])
-    ticket.interval = int(jsonRequest['interval'])
-    ticket.intervalUnit = jsonRequest['intervalUnit']
-    ticket.start = int(jsonRequest['start'])
-    ticket.requestNote = jsonRequest['requestNote']
-    ticket.requestDate = int(jsonRequest['requestDate'])
-    ticket.pendingStateCid += 1
-    ticket.put()
+    # ticket.drops = int(jsonRequest['drops'])
+    # ticket.photo = jsonRequest['photo']
+    # ticket.envread = jsonRequest['envread']
+    # ticket.runs = int(jsonRequest['runs'])
+    # ticket.interval = int(jsonRequest['interval'])
+    # ticket.intervalUnit = jsonRequest['intervalUnit']
+    # ticket.start = int(jsonRequest['start'])
+    # ticket.requestNote = jsonRequest['requestNote']
+    # ticket.requestDate = int(jsonRequest['requestDate'])
+    # ticket.pendingStateCid += 1
+    # ticket.put()
     return {}
 
 
 def ConfirmDelivery(jsonRequest):
     deliveredTicket = int(jsonRequest['ticket'])
-    pendingTicket = GetSingletonTicket()
+    # pendingTicket = GetSingletonTicket()
 
     # the first run id --> we confirm delivery started
-    if pendingTicket.requestDate > 0 and pendingTicket.ticket == deliveredTicket\
-        and not GetDeliveryItemInHistory(deliveredTicket, HYDROID_UNIT_ID):
-        MoveToHistory(HYDROID_UNIT_ID)
+    # if pendingTicket.requestDate > 0 and pendingTicket.ticket == deliveredTicket\
+    #     and not GetDeliveryItemInHistory(deliveredTicket, HYDROID_UNIT_ID):
+    #     MoveToHistory(HYDROID_UNIT_ID)
 
     runid = int(jsonRequest['runid'])
-    if runid <= 0:
-        return {}
+    # if runid <= 0:
+    #     return {}
 
     runs = int(jsonRequest['runs'])
 
@@ -297,41 +339,49 @@ def GetDeliveryItemForTicket(ticket, hydroidUnitId):
     return delivery
 
 
-def MoveToHistory(hydroidUnitId):    # moves the pending data to history list
+def AddToHistory(hydroidUnitId, jsonRequest):
     # source ticket
     ticket = GetSingletonTicket()
+    ticket.ticket += 1
 
     # target delivery - create one if not there
     delivery = GetDeliveryItemForTicket(ticket.ticket, hydroidUnitId)
 
     # copy from source to target
     delivery.ticket = ticket.ticket
-    delivery.drops = ticket.drops
-    delivery.photo = ticket.photo
-    delivery.envread = ticket.envread
-    delivery.runs = ticket.runs
-    delivery.interval = ticket.interval
-    delivery.intervalUnit = ticket.intervalUnit
-    delivery.start = ticket.start
-    delivery.requestDate = ticket.requestDate
-    delivery.requestNote = ticket.requestNote
-    delivery.deliveryNote = "pending"
+    delivery.drops = jsonRequest['drops']
+    delivery.photo = jsonRequest['photo']
+    delivery.envread = jsonRequest['envread']
+    delivery.runs = jsonRequest['runs']
+    delivery.interval = jsonRequest['interval']
+    delivery.intervalUnit = jsonRequest['intervalUnit']
+    delivery.start = jsonRequest['start']
+    delivery.requestNote = jsonRequest['requestNote']
+    delivery.requestDate = jsonRequest['requestDate']
+    delivery.runsFinished = 0
+    delivery.finished = False
+    delivery.deliveryDate = -1
+    delivery.deliveryNote = JOB_STATE_PENDING
+    delivery.temperature = -1
+    delivery.moisture = -1
+    delivery.imageBlobKey = None
+    delivery.imageBlobURL = None
     delivery.put()
 
-    # clear up source (the pending data) with the ticket incremented
-    ticket.ticket += 1
-    ticket.drops = 0
-    ticket.photo = '0'
-    ticket.envread = '0'
-    ticket.runs = 0
-    ticket.interval = 0
-    ticket.intervalUnit = 'd'
-    ticket.start = -1
-    ticket.requestNote = ''
-    ticket.requestDate = 0
     ticket.pendingStateCid += 1
-    ticket.historyListCid += 1
     ticket.put()
+
+    # clear up source (the pending data) with the ticket incremented
+    # ticket.drops = 0
+    # ticket.photo = '0'
+    # ticket.envread = '0'
+    # ticket.runs = 0
+    # ticket.interval = 0
+    # ticket.intervalUnit = 'd'
+    # ticket.start = -1
+    # ticket.requestNote = ''
+    # ticket.requestDate = 0
+    # ticket.pendingStateCid += 1
 
     return delivery
 
@@ -343,8 +393,8 @@ def FetchActiveTaskList():
 
 
 def FetchHistoryList(jsonRequest):
-    query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID))\
-        .order(-Delivery.ticket)
+    query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)) \
+        .filter(Delivery.finished == True).order(-Delivery.ticket)
 
     topN = jsonRequest['topN']
     if topN <= 0:

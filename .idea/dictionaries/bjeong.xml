@@ -5,6 +5,7 @@
       <w>columntoggle</w>
       <w>controlgroup</w>
       <w>custombox</w>
+      <w>darkblue</w>
       <w>datastore</w>
       <w>datebox</w>
       <w>durationbox</w>
@@ -23,6 +24,7 @@
       <w>sprintf</w>
       <w>taskid</w>
       <w>timebox</w>
+      <w>viewport</w>
       <w>webtoolkit</w>
     </words>
   </dictionary>
