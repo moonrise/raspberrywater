@@ -1,4 +1,5 @@
 import datetime
+import math
 import RPi.GPIO as GPIO
 from SimpleCV import Display, Camera, VideoStream, Image, DrawingLayer, Color
 from time import sleep
@@ -20,10 +21,12 @@ AC_TEMPERATURE = 0
 AC_MOISTURE = 7
 
 # internal button control
-rpiButtonPressCallback
+rpiButtonPressCallback = None
 lastButtonValue = False
 
-# solenoid control
+# solenoid/squirt control
+MAX_SQUIRTS = 5
+ticketNo = 0
 squirtQueue = 0        # number of squirts pending
 solenoidHigh = False
 
@@ -35,11 +38,13 @@ IMAGE_HEIGHT = 240
 
 
 def setup(buttonPressCallback):
+    global rpiButtonPressCallback
+
+    rpiButtonPressCallback = buttonPressCallback
+
     setupGPIOPorts()
     setupCamera()
 
-    global rpiButtonPressCallback
-    rpiButtonPressCallback = buttonPressCallback
 
 
 def cleanup():
@@ -137,6 +142,15 @@ def takePhoto(ticket, runid):
     timeText = datetime.datetime.now().strftime("%H:%M:%S %m/%d/%Y")
     addText(fileName, timeText)
     return fileName
+
+
+def queueSquirt(ticket, drops):
+    global squirtQueue, ticketNo
+
+    if squirtQueue <= 0:     # only if not squirting already - do not flood it
+        squirtQueue = min(math.fabs(drops), MAX_SQUIRTS)
+        ticketNo = ticket
+        print "squirt qeued for ticket %d with %d drops" % (ticketNo, squirtQueue)
 
 
 def onRpiSystemTick(job, isLast):

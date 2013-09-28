@@ -35,5 +35,9 @@ def takePhoto(ticket, runid):
     pass
 
 
+def queueSquirt(ticket, drops):
+    pass
+
+
 def testADC():
     pass

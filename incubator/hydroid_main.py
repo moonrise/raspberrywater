@@ -1,23 +1,19 @@
 import sys
-import math
 import time
 import json
 import requests
 
-# import hydroid_device as hd
+#import hydroid_device as hd
 import hydroid_device_nil as hd
 
 
-API_URL = 'http://waterthem.appspot.com/app/jsonApi'
+#API_URL = 'http://waterthem.appspot.com/app/jsonApi'
 #API_URL = 'http://localhost:8080/app/jsonApi'
-#API_URL = 'http://192.168.2.110:8080/app/jsonApi'
+API_URL = 'http://192.168.2.110:8080/app/jsonApi'
 
-MAX_SQUIRTS = 5
 
 # web requests
 listenToWeb = False
-ticketNo = 0
-
 cronQueue = {}
 cronActive = {}
 cronFinished = {}
@@ -38,16 +34,7 @@ def getIntervalMilliForUnit(unit):
 
 
 def onRpiButtonPress():
-    queueSquirt(0, 1)
-
-
-def queueSquirt(ticket, drops):
-    global squirtQueue, ticketNo
-
-    if squirtQueue <= 0:     # only if not squirting already - do not floot it
-        squirtQueue = min(math.fabs(drops), MAX_SQUIRTS)
-        ticketNo = ticket
-        print "squirt qeued for ticket %d with %d drops" % (ticketNo, squirtQueue)
+    hd.queueSquirt(0, 1)
 
 
 def handleCommError(message):
@@ -263,7 +250,7 @@ def onUserTask(job, isLast):
         job.imageFileName = hd.takePhoto(job.id, job.runid)
 
     if job.drops > 0:
-        queueSquirt(job.id, job.drops)
+        hd.queueSquirt(job.id, job.drops)
         job.squirts = job.drops     # no way of confirming the drops, so echo back for now
 
     onDelivered(job, isLast)
