@@ -31,7 +31,7 @@ var squirtDetails = (function () {
     }
 
     function onDetailsRefresh() {
-        squirtCommon.fetchHistoryList(20, onFetchHistoryListOK);
+        squirtCommon.fetchActiveAndHistoricalList(30, onFetchAllListOK);
     }
 
     function onDetailsNext() {
@@ -110,7 +110,7 @@ var squirtDetails = (function () {
         $("#details-next-button").button('refresh');
     }
 
-    function onFetchHistoryListOK(jsonResponse) {
+    function onFetchAllListOK(jsonResponse) {
         // stash history items for later navigation
         historyItems = jsonResponse.histories;
 

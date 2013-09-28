@@ -147,6 +147,8 @@ class JsonAPI(webapp2.RequestHandler):
             self.response.write(json.dumps(FetchActiveTaskList()))
         elif command == "fetchHistoryList":
             self.response.write(json.dumps(FetchHistoryList(jsonRequest)))
+        elif command == "fetchActiveAndHistoricalList":
+            self.response.write(json.dumps(FetchActiveAndHistoricalList(jsonRequest)))
         elif command == "submitSquirtRequest":
             self.response.write(json.dumps(SubmitSquirtRequest(jsonRequest)))
         elif command == "confirmDelivery":
@@ -382,6 +384,17 @@ def FetchActiveTaskList():
 def FetchHistoryList(jsonRequest):
     query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)) \
         .filter(Delivery.finished == True).order(-Delivery.ticket)
+
+    topN = jsonRequest['topN']
+    if topN <= 0:
+        return toJsonDeliveryList(query.fetch())    # return all rows
+    else:
+        return toJsonDeliveryList(query.fetch(topN))
+
+
+def FetchActiveAndHistoricalList(jsonRequest):
+    query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)) \
+        .order(-Delivery.ticket)
 
     topN = jsonRequest['topN']
     if topN <= 0:

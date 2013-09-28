@@ -36,6 +36,10 @@ var squirtCommon = (function () {
         $.ajax(buildJsonAPIRequest("fetchHistoryList", { 'topN':topN }, onOK, onNotOK, onDone));
     }
 
+    function fetchActiveAndHistoricalList(topN, onOK, onNotOK, onDone) {
+        $.ajax(buildJsonAPIRequest("fetchActiveAndHistoricalList", { 'topN':topN }, onOK, onNotOK, onDone));
+    }
+
     function getMilliSinceEpoch() {
         return moment().valueOf();
     }
@@ -241,6 +245,7 @@ var squirtCommon = (function () {
         buildJsonAPIRequest: buildJsonAPIRequest,
         fetchActiveTaskList: fetchActiveTaskList,
         fetchHistoryList: fetchHistoryList,
+        fetchActiveAndHistoricalList: fetchActiveAndHistoricalList,
 
         formatRequestItemsHtml: formatRequestItemsHtml,
         formatRequestItemsImage: formatRequestItemsImage,
