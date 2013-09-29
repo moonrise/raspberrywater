@@ -284,7 +284,13 @@ def ConfirmDelivery(jsonRequest):
 
     # update the one in history
     delivered = GetDeliveryItemForTicket(deliveredTicket, HYDROID_UNIT_ID)
-    if delivered:
+    if not delivered:
+        return
+
+    if delivered.finished:      # this is possible if canceled
+        return
+
+    if delivered and delivered.deliveryNote != JOB_STATE_CANCELED:
         delivered.runsFinished = runid
         delivered.finished = jsonRequest['finished'] in '1'
         delivered.deliveryDate = int(jsonRequest['deliveryDate'])

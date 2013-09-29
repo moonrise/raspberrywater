@@ -14,8 +14,9 @@ API_URL = 'http://192.168.2.110:8080/app/jsonApi'
 
 # web requests
 listenToWeb = False
-queuedJobs = {}
-activeJobs = {}
+queuedJobs = set()
+activeJobs = set()
+cancelRequests = set()
 
 
 def getMilliSinceEpoch():
@@ -74,24 +75,37 @@ def fireJsonApi(command, parameters):
 
 
 def pollServer():
+    global cancelRequests
+
+    # not easy choice of set vs. dict...
+    # thinking that it is better than building job objects for set operations
+    # maybe it is better to use dictionary, not sure
+    activeJobKeys = set()
+    for job in activeJobs:
+        if job.id > 0:      # exclude system jobs
+            activeJobKeys.add(job.id)
+
+    serverJobKeys = set()       # the job list key server is sending to us
+
     try:
         response = fireJsonApi('fetchActiveTaskList', {})
-        if not response or response['length'] <= 0:
-            return      # no active jobs
+        if response and response['length'] > 0:
+            for request in response['list']:
+                ticket = request['ticket']
+                serverJobKeys.add(ticket)
 
-        for job in response['list']:
-            handleServerJob(job)
+                if ticket not in activeJobKeys:
+                    handleServerJob(request)
+                else:
+                    print "=====> ticket %d is being worked on already" % ticket
     except:
         pass    # can't access the server? keep on trying forever - it may work again
+
+    cancelRequests = activeJobKeys - serverJobKeys
 
 
 def handleServerJob(job):
     ticket = job['ticket']
-
-    if ticket in queuedJobs or ticket in activeJobs:
-        print "==0==> job %d is being worked on already" % ticket
-        return      # already aware of it
-
     drops = job['drops']
     photo = job['photo'] != '0'
     envread = job['envread'] != '0'
@@ -147,6 +161,14 @@ class Job:
         self.squirts = -1                # delivered against the requested self.drops
         self.imageFileName = None
 
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.id)
 
     def dump(self):
         print "id: %d, interval: %d, start: %d, end: %d" % (self.id, self.interval, self.startTime, self.endTime)
@@ -194,36 +216,45 @@ class OneShotJob(Job):
 
 
 def queueJob(job):
-    queuedJobs[job.id] = job
+    queuedJobs.add(job)
 
 
 def addJob(job):
-    activeJobs[job.id] = job
+    activeJobs.add(job)
 
 
 def removeJob(job):
-    del activeJobs[job.id]
+    activeJobs.remove(job)
+
+
+def removeJobById(id):
+    for j in activeJobs:
+        if j.id == id:
+            activeJobs.remove(j)
 
 
 def doTimedLoop(resolution=100):
+    global activeJobs
+
     startTime = getMilliSinceEpoch()
     while True:
         currentTime = getMilliSinceEpoch()
 
         # add queued jobs - queuing needed to avoid collection change while iterating
-        for q in queuedJobs.itervalues():
-            addJob(q)
+        activeJobs |= queuedJobs
         queuedJobs.clear()
 
         # do some work
-        finishedItems = []
-        for v in activeJobs.itervalues():
-            if not v.onTimerTick(currentTime):
-                finishedItems.append(v)
+        finishedItems = set()
+        for v in activeJobs:
+            if v.id in cancelRequests:
+                finishedItems.add(v)
+                #print "---xxxx---> job %d is canceled" % v.id
+            elif not v.onTimerTick(currentTime):
+                finishedItems.add(v)
 
         # handle the finished items if any
-        for f in finishedItems:
-            removeJob(f)
+        activeJobs -= finishedItems
 
         # sleep away for the remaining time if any
         tick = (currentTime - startTime) / resolution
