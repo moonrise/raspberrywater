@@ -127,10 +127,10 @@ var squirtDetails = (function () {
 
         if (currentTicket <= 0 && historyItems.length > 0) {
             currentIndex = 0;   // most recent
-            currentItem = historyItems[currentIndex]
+            updateButtonStates();
         }
         // locate the current index of the initial ticket
-        if (currentIndex < 0) {
+        else if (currentIndex < 0) {
             $.each(historyItems, function(index, value) {
                 if (value.ticket == currentTicket) {
                     currentIndex = index;
