@@ -14,8 +14,8 @@ API_URL = 'http://192.168.2.110:8080/app/jsonApi'
 
 # web requests
 listenToWeb = False
-queuedJobs = set()
-activeJobs = set()
+queuedJobs = {}
+activeJobs = {}
 
 
 def getMilliSinceEpoch():
@@ -149,15 +149,16 @@ class Job:
 
     # returns false if it needs to be deactivated (i.e. no more callbacks!)
     def onTimerTick(self, currentTime):
-        if self.interval == 0:  # one shot job
+        # one shot job
+        if self.interval == 0:
             self.runid = 1
             self.callback(self, True)
             return False
 
         # multiple shots
-        if self.id > 0 and self.runid < 0:
-            self.runid = 0
-            onQuickAck(self)         # so that the pending request is removed in the remote
+        if self.id > 0 and self.runid < 0:  # for non system jobs that never started yet only
+            self.runid = 0                  # run id 0 may wait for the right start time
+            onQuickAck(self)                # send a quick response (i.e. quick meaning before start)
 
         currentTimeIndex = (currentTime - self.startTime) / self.interval
         if currentTime < self.startTime + currentTimeIndex * self.interval - self.interval * 0.05:
@@ -189,15 +190,15 @@ class OneShotJob(Job):
 
 
 def queueJob(job):
-    queuedJobs.add(job)
+    queuedJobs[job.id] = job
 
 
 def addJob(job):
-    activeJobs.add(job)
+    activeJobs[job.id] = job
 
 
 def removeJob(job):
-    activeJobs.remove(job)
+    del activeJobs[job.id]
 
 
 def doTimedLoop(resolution=100):
@@ -206,13 +207,13 @@ def doTimedLoop(resolution=100):
         currentTime = getMilliSinceEpoch()
 
         # add queued jobs - queuing needed to avoid collection change while iterating
-        for q in queuedJobs:
+        for q in queuedJobs.itervalues():
             addJob(q)
         queuedJobs.clear()
 
         # do some work
         finishedItems = []
-        for v in activeJobs:
+        for v in activeJobs.itervalues():
             if not v.onTimerTick(currentTime):
                 finishedItems.append(v)
 
