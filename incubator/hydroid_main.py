@@ -75,33 +75,43 @@ def fireJsonApi(command, parameters):
 
 
 def pollServer():
+    try:
+        response = fireJsonApi('pollServer', {})
+        if response:
+            handleServerResponse(response)
+    except:
+        pass    # can't access the server? keep on trying forever - it may work again
+
+
+def handleServerResponse(response):
     global cancelRequests
 
     # not easy choice of set vs. dict...
     # thinking that it is better than building job objects for set operations
     # maybe it is better to use dictionary, not sure
-    activeJobKeys = set()
+    myActiveJobKeys = set()
     for job in activeJobs:
         if job.id > 0:      # exclude system jobs
-            activeJobKeys.add(job.id)
+            myActiveJobKeys.add(job.id)
 
-    serverJobKeys = set()       # the job list key server is sending to us
+    activeServerJobKeys = set()       # the job list key server is sending to us
+    serverJobs = response['activeJobs']
+    if serverJobs['length'] > 0:
+        for request in serverJobs['list']:
+            ticket = request['ticket']
+            activeServerJobKeys.add(ticket)
 
-    try:
-        response = fireJsonApi('fetchActiveTaskList', {})
-        if response and response['length'] > 0:
-            for request in response['list']:
-                ticket = request['ticket']
-                serverJobKeys.add(ticket)
+            if ticket not in myActiveJobKeys:
+                handleServerJob(request)
+            else:
+                print "=====> ticket %d is being worked on already" % ticket
+    cancelRequests = myActiveJobKeys - activeServerJobKeys
 
-                if ticket not in activeJobKeys:
-                    handleServerJob(request)
-                else:
-                    print "=====> ticket %d is being worked on already" % ticket
-    except:
-        pass    # can't access the server? keep on trying forever - it may work again
+    if response['envRead']:
+        pass
 
-    cancelRequests = activeJobKeys - serverJobKeys
+    if response['getPhoto']:
+        pass
 
 
 def handleServerJob(job):

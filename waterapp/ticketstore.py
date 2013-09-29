@@ -144,6 +144,8 @@ class JsonAPI(webapp2.RequestHandler):
         command = jsonRequest['command']
         if command == "queryChangeState":
             self.response.write(json.dumps(QueryChangeState()))
+        elif command == "pollServer":
+            self.response.write(json.dumps(PollServer(jsonRequest)))
         elif command == "fetchActiveTaskList":
             self.response.write(json.dumps(FetchActiveTaskList()))
         elif command == "fetchHistoryList":
@@ -397,6 +399,16 @@ def InvalidateTimedOutJobs():
         d.deliveryNote = JOB_STATE_TIMEDOUT
         d.put()
         DirtyAllStates()
+
+
+def PollServer(jsonRequest):
+    # return the request to rpi; jobs are queued, other parameters are serviced
+    # in the subsequent poll call
+    return {
+        'envRead': '1',
+        'getPhoto': '1',
+        'activeJobs': FetchActiveTaskList()
+    }
 
 
 def FetchActiveTaskList():
