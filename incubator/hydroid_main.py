@@ -14,8 +14,8 @@ API_URL = 'http://192.168.2.110:8080/app/jsonApi'
 
 # web requests
 listenToWeb = False
-queuedJobs = {}
-activeJobs = {}
+queuedJobs = set()
+activeJobs = set()
 
 
 def getMilliSinceEpoch():
@@ -189,15 +189,15 @@ class OneShotJob(Job):
 
 
 def queueJob(job):
-    queuedJobs[job.id] = job
+    queuedJobs.add(job)
 
 
 def addJob(job):
-    activeJobs[job.id] = job
+    activeJobs.add(job)
 
 
 def removeJob(job):
-    del activeJobs[job.id]
+    activeJobs.remove(job)
 
 
 def doTimedLoop(resolution=100):
@@ -206,13 +206,13 @@ def doTimedLoop(resolution=100):
         currentTime = getMilliSinceEpoch()
 
         # add queued jobs - queuing needed to avoid collection change while iterating
-        for q in queuedJobs.itervalues():
+        for q in queuedJobs:
             addJob(q)
         queuedJobs.clear()
 
         # do some work
         finishedItems = []
-        for v in activeJobs.itervalues():
+        for v in activeJobs:
             if not v.onTimerTick(currentTime):
                 finishedItems.append(v)
 
@@ -263,7 +263,7 @@ def onQuickAck(job):
         'finished': '0',
         'deliveryDate': getMilliSinceEpoch(),
         'deliveryNote': 'waiting'})
-    print "delivery ask sent for ticket %d" % job.id
+    print "delivery ack sent for ticket %d" % job.id
 
 
 def onDelivered(job, isLast):
