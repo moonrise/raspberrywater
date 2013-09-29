@@ -14,8 +14,8 @@ API_URL = 'http://192.168.2.110:8080/app/jsonApi'
 
 # web requests
 listenToWeb = False
-cronQueue = {}
-cronActive = {}
+queuedJobs = {}
+activeJobs = {}
 
 
 def getMilliSinceEpoch():
@@ -88,7 +88,7 @@ def pollServer():
 def handleServerJob(job):
     ticket = job['ticket']
 
-    if ticket in cronQueue or ticket in cronActive:
+    if ticket in queuedJobs or ticket in activeJobs:
         print "==0==> job %d is being worked on already" % ticket
         return      # already aware of it
 
@@ -189,15 +189,15 @@ class OneShotJob(Job):
 
 
 def queueJob(job):
-    cronQueue[job.id] = job
+    queuedJobs[job.id] = job
 
 
 def addJob(job):
-    cronActive[job.id] = job
+    activeJobs[job.id] = job
 
 
 def removeJob(job):
-    del cronActive[job.id]
+    del activeJobs[job.id]
 
 
 def doTimedLoop(resolution=100):
@@ -206,13 +206,13 @@ def doTimedLoop(resolution=100):
         currentTime = getMilliSinceEpoch()
 
         # add queued jobs - queuing needed to avoid collection change while iterating
-        for q in cronQueue.itervalues():
+        for q in queuedJobs.itervalues():
             addJob(q)
-        cronQueue.clear()
+        queuedJobs.clear()
 
         # do some work
         finishedItems = []
-        for v in cronActive.itervalues():
+        for v in activeJobs.itervalues():
             if not v.onTimerTick(currentTime):
                 finishedItems.append(v)
 
