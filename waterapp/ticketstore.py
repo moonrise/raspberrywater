@@ -242,12 +242,15 @@ def SubmitSquirtRequest(jsonRequest):
             .filter(Delivery.runs == 1)\
             .filter(Delivery.start < 1)
 
+        bumped = False
         for d in query.fetch():
             d.finished = True
             d.deliveryNote = JOB_STATE_BUMPED
             d.put()
+            bumped = True
 
-        DirtyAllStates()
+        if bumped:
+            DirtyAllStates()
 
     # now submit the request by adding to the active list
     AddToHistory(HYDROID_UNIT_ID, jsonRequest)
@@ -333,8 +336,6 @@ def AddToHistory(hydroidUnitId, jsonRequest):
     ticket.pendingStateCid += 1
     ticket.put()
 
-    return delivery
-
 
 def computeEndTime(delivery, startTime):
     interval = delivery.interval
@@ -362,7 +363,7 @@ def InvalidateTimedOutJobs():
         else:
             if d.runs == 1:     # once, immediate never times out
                 continue
-            if d.runs > 1 and computeEndTime(d, now) > (now - 2000):  # give a few seconds of margin
+            if d.runs > 1 and (d.runsFinished <= 0 or computeEndTime(d, now) > (now - 2000)):
                 continue
 
         # timed out job

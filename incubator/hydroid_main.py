@@ -282,7 +282,7 @@ def onDelivered(job, isLast):
     print "delivery confirmation sent for ticket %d" % job.id
 
     # upload the image file after the ack
-    if job.photo:
+    if job.photo and job.imageFileName is not None:
         response = fireJsonApi('procureUploadURL', {})
         if not response:
             return

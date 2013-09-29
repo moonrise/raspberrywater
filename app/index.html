@@ -71,6 +71,9 @@
 
 <div data-role="page" id="main-page" data-theme="e">
     <div data-role="header" data-theme="e">
+        <a href="doc.html" data-transition="slide" data-direction="reverse"
+           data-icon="arrow-l" class="ui-btn-left">info</a>
+        <a id="details-button" data-icon="arrow-r" class="ui-btn-right">details</a>
         <h3>hydroid</h3>
     </div>
 
@@ -88,7 +91,8 @@
                 <p id="rpi-heart-beat" class="section-line-value"/>
             </div>
 
-            <a id="simulate-squirt-delivery-button" data-role="button" data-icon="gear" data-iconpos="right" data-mini="true"
+            <a id="simulate-squirt-delivery-button" data-role="button" data-icon="gear"
+               data-iconpos="left" data-mini="true"
                data-theme="e" style="margin-top: 12px">simulate delivery</a>
         </div>
 
@@ -161,7 +165,7 @@
 
             <a id="request-squirt-button" data-role="button" data-mini="true"
                style="margin-top: 12px"
-               data-icon="gear" data-iconpos="right" data-theme="e">submit request</a>
+               data-icon="gear" data-iconpos="left" data-theme="e">submit request</a>
         </div>
 
         <div id="active-task-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"

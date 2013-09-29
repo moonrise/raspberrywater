@@ -114,6 +114,10 @@ var squirtDetails = (function () {
         // stash history items for later navigation
         historyItems = jsonResponse.list;
 
+        if (currentTicket <= 0 && historyItems.length > 0) {
+            currentIndex = 0;   // most recent
+            currentItem = historyItems[currentIndex]
+        }
         // locate the current index of the initial ticket
         if (currentIndex < 0) {
             $.each(historyItems, function(index, value) {

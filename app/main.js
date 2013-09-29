@@ -31,7 +31,9 @@ var squirtMain = (function () {
         $("#refresh-button").click(onRefreshButton);
         $("#refresh-button .ui-btn-text").html(RefreshButtonText);
 
-        // list view click handler
+        // navigation event handlers
+//        $("#doc-button").click(navigateToDocView);
+        $("#details-button").click(navigateToDetailsView2);
         $("#active-task-list").on('click', 'li a', navigateToDetailsView);
         $("#history-list").on('click', 'li a', navigateToDetailsView);
 
@@ -220,7 +222,7 @@ var squirtMain = (function () {
             var imageFile = item.deliveryDate ? sprintf("green-leaf-%d.jpg", ++randomImage % images) : "no-water.png";
             var e = ['<li>'];
             //e.push(sprintf('<p class="ui-li-aside">Note</p>')); // not working well
-            e.push(sprintf('<a href="#" data-transition="flip" id=%d>', item.ticket));
+            e.push(sprintf('<a href="#" id=%d>', item.ticket));
             e.push(sprintf('<img src="images2/%s" hspace="6" vspace="6"/>', imageFile));
             e.push(sprintf('<p style="font-size: 12px">request <strong>%d</strong>:  %s</p>',
                             item.ticket, squirtCommon.formatRequestItemsImage(item, 13)));
@@ -237,8 +239,14 @@ var squirtMain = (function () {
     }
 
     function onSquirtRequest() {
+        $("#request-squirt-button").addClass("ui-disabled");
         $.ajax(squirtCommon.buildJsonAPIRequest("submitSquirtRequest",
                collectSquirtRequestParameters(), null, null, onSquirtRequestDone));
+
+        // disable the button so that users can't click repeatedly
+        setTimeout(function() {
+            $("#request-squirt-button").removeClass("ui-disabled");
+        }, 5000)
     }
 
     function collectSquirtRequestParameters() {
@@ -293,6 +301,13 @@ var squirtMain = (function () {
         });
     }
 
+    function navigateToDetailsView2(event) {
+        event.preventDefault();
+        $.mobile.changePage('details.html', {
+            transition:"slide",
+            data: { ticket: -1 }
+        });
+    }
 
     //
     // public API
