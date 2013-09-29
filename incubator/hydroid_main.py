@@ -16,7 +16,6 @@ API_URL = 'http://192.168.2.110:8080/app/jsonApi'
 listenToWeb = False
 cronQueue = {}
 cronActive = {}
-cronFinished = {}
 
 
 def getMilliSinceEpoch():
@@ -89,7 +88,7 @@ def pollServer():
 def handleServerJob(job):
     ticket = job['ticket']
 
-    if ticket in cronQueue or ticket in cronActive or ticket in cronFinished:
+    if ticket in cronQueue or ticket in cronActive:
         print "==0==> job %d is being worked on already" % ticket
         return      # already aware of it
 
@@ -198,7 +197,6 @@ def addJob(job):
 
 
 def removeJob(job):
-    cronFinished[job.id] = job
     del cronActive[job.id]
 
 
