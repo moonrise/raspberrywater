@@ -97,6 +97,7 @@ def handleServerJob(job):
     envread = job['envread'] != '0'
 
     runs = job['runs']
+    runsFinished = job['runsFinished']
     start = job['start']
 
     if runs == 1 and start < 0:   # once immediately
@@ -108,7 +109,7 @@ def handleServerJob(job):
             startTime = getMilliSinceEpoch()    # use now as the start time
         interval = job['interval'] * getIntervalMilliForUnit(job['intervalUnit'])
         endTime = startTime + interval * (runs - 1) + interval * 0.9    # not too much lag
-        queueJob(Job(ticket, runs, interval, startTime, endTime, onUserTask, drops, photo, envread))
+        queueJob(Job(ticket, runs, interval, startTime, endTime, onUserTask, drops, photo, envread, runsFinished))
 
 
 class Job:
@@ -121,7 +122,7 @@ class Job:
     # - drops (int): squirt count
     # - photo (bool): take photo
     # - envread (bool): read environment vars like temperature and moisture
-    def __init__(self, id, runs, interval, startTime, endTime, callback, drops, photo, envread):
+    def __init__(self, id, runs, interval, startTime, endTime, callback, drops, photo, envread, runsFinished):
         self.id = id
         self.runs = runs
         self.interval = interval
@@ -135,7 +136,10 @@ class Job:
         # work variables
         self.lastEventTime = startTime - interval
         self.lastEventIndex = -1        # index may skip if falling behind
-        self.runid = -1                 # runid does not skip
+
+        # runid does not skip (as opposed to lastEventIndex)
+        # runid starts from -1 if the job never started to transition to 0 (wait state) first
+        self.runid = runsFinished if runsFinished > 0 else -1
 
         # task ack
         self.temperature = -1
@@ -181,12 +185,12 @@ class Job:
 
 class SystemJob(Job):
     def __init__(self, id, interval, callback):
-        Job.__init__(self, id, sys.maxint, interval, getMilliSinceEpoch(), 0, callback, 0, 0, 0)
+        Job.__init__(self, id, sys.maxint, interval, getMilliSinceEpoch(), 0, callback, 0, 0, 0, 0)
 
 
 class OneShotJob(Job):
     def __init__(self, id, callback, drops, photo, envread):
-        Job.__init__(self, id, 1, 0, 0, 0, callback, drops, photo, envread)
+        Job.__init__(self, id, 1, 0, 0, 0, callback, drops, photo, envread, 0)
 
 
 def queueJob(job):
