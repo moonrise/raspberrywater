@@ -15,6 +15,7 @@ HYDROID_UNIT_ID = 'hydroid6'
 JOB_STATE_PENDING = "pending"
 JOB_STATE_BUMPED = "bumped"
 JOB_STATE_TIMEDOUT = "timed out"
+JOB_STATE_CANCELED = "canceled"
 
 
 def getMilliSinceEpoch():
@@ -157,6 +158,8 @@ class JsonAPI(webapp2.RequestHandler):
             self.response.write(json.dumps(FetchMeasures(jsonRequest)))
         elif command == "procureUploadURL":
             self.response.write(json.dumps(ProcureUploadURL()))
+        elif command == "cancelJob":
+            self.response.write(json.dumps(RequestJobCancel(jsonRequest)))
         else:
             self.response.write(json.dumps({'apiError': "%s is invalid command" % command}))
 
@@ -255,6 +258,23 @@ def SubmitSquirtRequest(jsonRequest):
     # now submit the request by adding to the active list
     AddToHistory(HYDROID_UNIT_ID, jsonRequest)
     return {}
+
+
+def RequestJobCancel(jsonRequest):
+    ticketToCancel = jsonRequest['ticket']
+    query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)) \
+        .filter(Delivery.finished == False) \
+        .filter(Delivery.ticket == ticketToCancel)
+
+    cancelTarget = None
+    for delivery in query:
+        cancelTarget = delivery
+
+    if delivery:
+        delivery.finished = True
+        delivery.deliveryNote = JOB_STATE_CANCELED
+        delivery.put()
+        DirtyAllStates()
 
 
 def ConfirmDelivery(jsonRequest):

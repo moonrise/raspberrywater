@@ -19,6 +19,7 @@ var squirtDetails = (function () {
         $("#details-prev-button").click(onDetailsPrev);
         $("#details-next-button").click(onDetailsNext);
         $("#details-play-button").click(onDetailsPlay);
+        $("#details-cancel-button").click(onDetailsCancel);
         $("#details-refresh-button").click(onDetailsRefresh);
 
         // table row selection handler
@@ -58,6 +59,16 @@ var squirtDetails = (function () {
         // start
         currentRunid = 1;
         updatePhotoOnTimer();
+    }
+
+    function onDetailsCancel() {
+        if (currentItem == null || currentItem.finished) {
+            return;
+        }
+
+        // request cancel - hope it is honored
+        $.ajax(squirtCommon.buildJsonAPIRequest("cancelJob", {
+            'ticket': currentItem.ticket }));
     }
 
     function updatePhotoOnTimer() {

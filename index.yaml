@@ -11,6 +11,7 @@ indexes:
 - kind: Delivery
   ancestor: yes
   properties:
+  - name: finished
   - name: ticket
     direction: desc
 
