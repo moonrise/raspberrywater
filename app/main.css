@@ -79,10 +79,10 @@
     color: #0e1168;
 }
 
-.section-line-value-with-icon {
+.section-line-value-with-button {
     display: inline-block;
     margin-top: 8px;
-    vertical-align: middle;
+    vertical-align: top;
     font-size: 1em;
     color: #0e1168;
 }
