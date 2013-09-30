@@ -2,6 +2,8 @@
 # nil device module for hook up in IDE where no physical devices are available
 #
 
+photos = 0
+
 
 def setup(buttonPressCallback):
     pass
@@ -16,7 +18,7 @@ def setupCamera():
 
 
 def isCameraReady():
-    return False
+    return True
 
 
 def readTemperature():
@@ -32,7 +34,9 @@ def onRpiSystemTick(job, isLast):
 
 
 def takePhoto(ticket, runid):
-    pass
+    global photos
+    photos += 1
+    return "test-photo1.jpg" if photos % 2 == 1 else "test-photo2.jpg"
 
 
 def queueSquirt(ticket, drops):

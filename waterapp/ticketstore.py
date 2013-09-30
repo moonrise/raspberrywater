@@ -41,8 +41,8 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
         ticket.drops = 0
         ticket.photo = "0"
         ticket.envread = "0"
-        ticket.runs = 0
-        ticket.interval = 0
+        ticket.runs = 0             # use it for photo shot relay until we change the structure
+        ticket.interval = 0         # use it for photo shot relay (needs two counters!)
         ticket.intervalUnit = "d"
         ticket.start = 1
         ticket.requestNote = ''
@@ -158,7 +158,7 @@ class JsonAPI(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         command = jsonRequest['command']
         if command == "queryChangeState":
-            self.response.write(json.dumps(QueryChangeState()))
+            self.response.write(json.dumps(QueryChangeState(jsonRequest)))
         elif command == "pollServer":
             self.response.write(json.dumps(PollServer(jsonRequest)))
         elif command == "fetchActiveTaskList":
@@ -253,13 +253,20 @@ def DirtyAllStates():
     ticket.put()
 
 
-def QueryChangeState():
+def QueryChangeState(jsonRequest):
     measure = GetSingletonMeasure()
     ticket = GetSingletonTicket()
+    if jsonRequest['takeRpiPhoto']:
+        ticket.runs += 1
+        ticket.put()
+
     return {
         'lastRpiTime': measure.time,
         'lastRpiTemperature': measure.temperature,
         'lastRpiMoisture': measure.moisture,
+        'lastRpiMoisture': measure.moisture,
+        'imageBlobKey': str(measure.imageBlobKey),
+        'imageBlobURL': str(measure.imageBlobURL),
         'activeStateCid': ticket.pendingStateCid,
         'historyListCid': ticket.historyListCid,
     }
@@ -437,10 +444,17 @@ def PollServer(jsonRequest):
     measure.moisture = jsonRequest['moisture']
     measure.put()
 
+    takeRpiPhoto = False
+    ticket = GetSingletonTicket()
+    if ticket.interval < ticket.runs:
+        takeRpiPhoto = True
+        ticket.interval = ticket.runs
+        ticket.put()
+
     # return the request to rpi; jobs are queued, other parameters are serviced
     # in the subsequent poll call
     return {
-        'getPhoto': '0',        # '0' or '1'
+        'getPhoto': '1' if takeRpiPhoto else '0',
         'activeJobs': FetchActiveTaskList()
     }
 

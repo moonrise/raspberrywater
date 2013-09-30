@@ -52,7 +52,9 @@ def fireJsonApi(command, parameters):
     response = None
     try:
         response = requests.post(API_URL, data=json.dumps(payload), headers=headers)
-    except:
+    except Exception, error:
+        #print error.__doc__
+        #print error.message
         message = 'API "%s" failed' % command
         handleCommError(message)
         return
@@ -79,7 +81,9 @@ def pollServer():
         response = fireJsonApi('pollServer', pollPiggyBack.buildPayloadAndClear())
         if response:
             handleServerResponse(response)
-    except:
+    except Exception, error:
+        #print error.__doc__
+        #print error.message
         pass    # can't access the server? keep on trying forever - it may work again
 
 
@@ -107,7 +111,7 @@ def handleServerResponse(response):
                 print "=====> ticket %d is being worked on already" % ticket
     cancelRequests = myActiveJobKeys - activeServerJobKeys
 
-    pollPiggyBack.setGetPhoto(response['getPhoto'])
+    pollPiggyBack.setGetPhoto(True if response['getPhoto'] == '1' else False)
 
 
 def handleServerJob(job):
@@ -143,8 +147,9 @@ class PollPiggyBack:
 
     def setGetPhoto(self, isGetPhoto):
         self.isGetPhoto = isGetPhoto
-        if isGetPhoto:
+        if isGetPhoto and hd.isCameraReady():
             self.imageFileName = hd.takePhoto(0, 0)
+            pass
 
     def buildPayloadAndClear(self):
         payload = {}
@@ -153,14 +158,15 @@ class PollPiggyBack:
             payload['temperature'] = hd.readTemperature()
             payload['moisture'] = hd.readMoisture()
 
-        if self.isGetPhoto:
+        if self.isGetPhoto and self.imageFileName:
             uploadURL = getUploadURL()
             payload['uploadURL'] = uploadURL
             uploadImage(self.imageFileName, uploadURL, 0, 0, 0)
+            self.isGetPhoto = False
+            self.imageFileName = None
 
         payload['time'] = getMilliSinceEpoch()
 
-        self.isGetPhoto = False
         return payload
 
 pollPiggyBack = PollPiggyBack()
@@ -372,11 +378,13 @@ def uploadImage(imageFileName, url, id, runid, runs):
     try:
         requests.post(url, files={'file': open(imageFileName, 'rb')},
                       headers={'ticket': str(id), 'runid': str(runid), 'runs': str(runs)})
-    except:
+        print 'image file %s uploaded with URL %s' % (imageFileName, url)
+    except Exception, error:
+        print error.__doc__
+        print error.message
         message = 'Uploading "%s" failed' % imageFileName
         handleCommError(message)
 
-    print 'image file %s uploaded with URL %s' % (imageFileName, url)
 
 
 #

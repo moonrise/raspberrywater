@@ -87,6 +87,12 @@
     color: #0e1168;
 }
 
+.photo-box {
+    padding: 5px 5px 2px;
+    overflow: hidden;
+    border: 1px solid grey;
+}
+
 .ui-table-columntoggle-btn {
     display: none !important;
 }

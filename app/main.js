@@ -8,12 +8,17 @@
  */
 
 var squirtMain = (function () {
+    const MAX_POLL_COUNT = 1000;    // seconds
+    const POLL_INCREMENT = 60;      // seconds
     const UPDATE_INTERVAL = 1000;
     const RefreshButtonText = "refresh";
 
-    var remainingPollCount = 30;
+    var remainingPollCount = POLL_INCREMENT;
     var myActiveStateCid = -1;
     var myHistoryListCid = -1;
+
+    var rpiImageURL = null;
+    var takeRpiPhoto = false;
 
 
     function appBootstrap() {
@@ -26,6 +31,8 @@ var squirtMain = (function () {
 
         // simulate squirt delivery handler
         $("#update-photo-button").click(onUpdatePhotoButton);
+        $("#rpi-photo").attr('src', "images2/not-available-128.png");
+        $("#rpi-photo").attr('alt', "No photo is available");
 
         // refresh handler
         $("#refresh-button").click(onRefreshButton);
@@ -153,15 +160,17 @@ var squirtMain = (function () {
     }
 
     function activateTransientPolling() {
-        var maxPollCount = 1000;
-        if (remainingPollCount < maxPollCount) {
-            remainingPollCount = Math.min(remainingPollCount + 50, maxPollCount);
+        if (remainingPollCount < MAX_POLL_COUNT) {
+            remainingPollCount = Math.min(remainingPollCount + POLL_INCREMENT, MAX_POLL_COUNT);
         }
     }
 
     function updateRemoteState() {
-        $.ajax(squirtCommon.buildJsonAPIRequest("queryChangeState", {},
+        $.ajax(squirtCommon.buildJsonAPIRequest("queryChangeState", {'takeRpiPhoto' : takeRpiPhoto },
             onQueryChangeState, null, onQueryChangeStateDone));
+
+        // one shot for each request
+        takeRpiPhoto = false;
     }
 
     function onQueryChangeState(jsonResponse) {
@@ -171,6 +180,12 @@ var squirtMain = (function () {
                             squirtCommon.toFahrenheit(jsonResponse.lastRpiTemperature),
                             squirtCommon.toMoisturePercent(jsonResponse.lastRpiMoisture));
         $("#rpi-last-beat").html(text);
+
+        var imageURL = jsonResponse.imageBlobURL;
+        if (imageURL != rpiImageURL) {
+            $("#rpi-photo").attr('src', imageURL);
+            $("#rpi-photo").attr('alt', imageURL);
+        }
 
         var activeStateCid = jsonResponse.activeStateCid;
         if (activeStateCid != myActiveStateCid) {
@@ -281,6 +296,14 @@ var squirtMain = (function () {
     }
 
     function onUpdatePhotoButton() {
+        $("#update-photo-button").addClass("ui-disabled");
+        takeRpiPhoto = true;
+        onRefreshButton(); // trigger the request
+
+        // disable the button so that users can't click repeatedly
+        setTimeout(function() {
+            $("#update-photo-button").removeClass("ui-disabled");
+        }, 10000)
     }
 
     /*
