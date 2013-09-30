@@ -39,7 +39,6 @@ var squirtMain = (function () {
         $("#refresh-button .ui-btn-text").html(RefreshButtonText);
 
         // navigation event handlers
-//        $("#doc-button").click(navigateToDocView);
         $("#details-button").click(navigateToDetailsView2);
         $("#active-task-list").on('click', 'li a', navigateToDetailsView);
         $("#history-list").on('click', 'li a', navigateToDetailsView);
@@ -263,7 +262,7 @@ var squirtMain = (function () {
     function onSquirtRequest() {
         $("#request-squirt-button").addClass("ui-disabled");
         $.ajax(squirtCommon.buildJsonAPIRequest("submitSquirtRequest",
-               collectSquirtRequestParameters(), null, null, onSquirtRequestDone));
+               collectSquirtRequestParameters(), null, onSquirtRequestError, onSquirtRequestDone));
 
         // disable the button so that users can't click repeatedly
         setTimeout(function() {
@@ -283,6 +282,11 @@ var squirtMain = (function () {
             requestNote: $("#note-input").val(),
             requestDate: squirtCommon.getMilliSinceEpoch()
         }
+    }
+
+    function onSquirtRequestError(xhr, status, error) {
+        //alert(xhr.responseText);
+        //$("#show-text").html(xhr.responseText);
     }
 
     function onSquirtRequestDone(xhr, status) {

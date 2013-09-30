@@ -521,7 +521,8 @@ def toJsonDeliveryList(queryResults):
 
 def FetchMeasures(jsonRequest):
     ticket = int(jsonRequest['ticket'])
-    measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)).filter(Measure.ticket == ticket)
+    measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID))\
+        .filter(Measure.ticket == ticket)
 
     measureList = []
     for m in measureQuery:

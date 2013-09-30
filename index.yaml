@@ -12,6 +12,30 @@ indexes:
   ancestor: yes
   properties:
   - name: finished
+  - name: runs
+  - name: start
+
+- kind: Delivery
+  ancestor: yes
+  properties:
+  - name: finished
+  - name: ticket
+
+- kind: Delivery
+  ancestor: yes
+  properties:
+  - name: finished
+
+- kind: Delivery
+  ancestor: yes
+  properties:
+  - name: finished
+  - name: ticket
+    direction: desc
+
+- kind: Delivery
+  ancestor: yes
+  properties:
   - name: ticket
     direction: desc
 
@@ -19,9 +43,12 @@ indexes:
   ancestor: yes
   properties:
   - name: ticket
-    direction: desc
+
+- kind: Measure
+  ancestor: yes
+  properties:
+  - name: ticket
   - name: runid
-    direction: desc
 
 - kind: Greeting
   ancestor: yes
