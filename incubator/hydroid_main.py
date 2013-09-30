@@ -76,7 +76,7 @@ def fireJsonApi(command, parameters):
 
 def pollServer():
     try:
-        response = fireJsonApi('pollServer', {})
+        response = fireJsonApi('pollServer', pollPiggyBack.buildPayloadAndClear())
         if response:
             handleServerResponse(response)
     except:
@@ -107,11 +107,7 @@ def handleServerResponse(response):
                 print "=====> ticket %d is being worked on already" % ticket
     cancelRequests = myActiveJobKeys - activeServerJobKeys
 
-    if response['envRead']:
-        pass
-
-    if response['getPhoto']:
-        pass
+    pollPiggyBack.setGetPhoto(response['getPhoto'])
 
 
 def handleServerJob(job):
@@ -134,6 +130,40 @@ def handleServerJob(job):
         interval = job['interval'] * getIntervalMilliForUnit(job['intervalUnit'])
         endTime = startTime + interval * (runs - 1) + interval * 0.9    # not too much lag
         queueJob(Job(ticket, runs, interval, startTime, endTime, onUserTask, drops, photo, envread, runsFinished))
+
+
+class PollPiggyBack:
+    def __init__(self):
+        self.isEnvRead = True   # always
+        self.isGetPhoto = False
+        self.imageFileName = None
+
+    def setEnvRead(self, isEnvRead):
+        self.isEnvRead = isEnvRead
+
+    def setGetPhoto(self, isGetPhoto):
+        self.isGetPhoto = isGetPhoto
+        if isGetPhoto:
+            self.imageFileName = hd.takePhoto(0, 0)
+
+    def buildPayloadAndClear(self):
+        payload = {}
+
+        if self.isEnvRead:
+            payload['temperature'] = hd.readTemperature()
+            payload['moisture'] = hd.readMoisture()
+
+        if self.isGetPhoto:
+            uploadURL = getUploadURL()
+            payload['uploadURL'] = uploadURL
+            uploadImage(self.imageFileName, uploadURL, 0, 0, 0)
+
+        payload['time'] = getMilliSinceEpoch()
+
+        self.isGetPhoto = False
+        return payload
+
+pollPiggyBack = PollPiggyBack()
 
 
 class Job:
@@ -327,19 +357,26 @@ def onDelivered(job, isLast):
 
     # upload the image file after the ack
     if job.photo and job.imageFileName is not None:
-        response = fireJsonApi('procureUploadURL', {})
-        if not response:
-            return
+        uploadImage(job.imageFileName, getUploadURL(), job.id, job.runid, job.runs)
 
-        uploadURL = response['url']
-        try:
-            requests.post(uploadURL, files={'file': open(job.imageFileName, 'rb')},
-                          headers={'ticket': str(job.id), 'runid': str(job.runid), 'runs': str(job.runs)})
-        except:
-            message = 'Uploading "%s" failed' % job.imageFileName
-            handleCommError(message)
-        print 'image file %s uploaded with URL %s' % (job.imageFileName, uploadURL)
+
+def getUploadURL():
+    response = fireJsonApi('procureUploadURL', {})
+    return response['url'] if response else None
+
+
+def uploadImage(imageFileName, url, id, runid, runs):
+    if imageFileName is None or url is None:
         return
+
+    try:
+        requests.post(url, files={'file': open(imageFileName, 'rb')},
+                      headers={'ticket': str(id), 'runid': str(runid), 'runs': str(runs)})
+    except:
+        message = 'Uploading "%s" failed' % imageFileName
+        handleCommError(message)
+
+    print 'image file %s uploaded with URL %s' % (imageFileName, url)
 
 
 #
@@ -363,9 +400,9 @@ if webProcessInterval > 0:
 
 # report the listening mode
 if listenToWeb:
-    print "listening to web requests for every %d seconds" % webProcessInterval
+    print "polling server for every %d seconds" % webProcessInterval
 else:
-    print "not listening to web requests, only internal requests are listened to"
+    print "server polling disabled"
 
 # hardware setup
 hd.setup(onRpiButtonPress)

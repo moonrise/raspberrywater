@@ -231,6 +231,15 @@ var squirtCommon = (function () {
         return " on " + formatDate(time);
     }
 
+    function toFahrenheit(count) {
+        var milliVolts = count * (3300.0 / 1023.0);
+        var celsius = ((milliVolts - 100.0) / 10.0) - 40.0;
+        return (celsius * 9.0/5.0) + 32.0;
+    }
+
+    function toMoisturePercent(count) {
+        return Math.min(100, count/800 * 100);  // 800 is saturation point (submerged in water)
+    }
 
     //
     // public API
@@ -241,6 +250,8 @@ var squirtCommon = (function () {
         formatDate: formatDate,
         formatDateShort: formatDateShort,
         getMilliSinceEpoch: getMilliSinceEpoch,
+        toFahrenheit: toFahrenheit,
+        toMoisturePercent: toMoisturePercent,
 
         buildJsonAPIRequest: buildJsonAPIRequest,
         fetchActiveTaskList: fetchActiveTaskList,

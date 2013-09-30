@@ -37,7 +37,7 @@ def GetSingletonTicket(hydroidUnitId=HYDROID_UNIT_ID):
     if not singletonTicket:
         ticket = Ticket(key=GetSingletonTicketKey(hydroidUnitId))
         ticket.ticket = 1           # valid ticket starts from zero
-        ticket.measure = 0          # just to keep track of the measure key
+        ticket.measure = 100        # just to keep track of the measure key
         ticket.drops = 0
         ticket.photo = "0"
         ticket.envread = "0"
@@ -92,6 +92,21 @@ class Delivery(ndb.Model):
     moisture = ndb.IntegerProperty()
     imageBlobKey = ndb.BlobKeyProperty()
     imageBlobURL = ndb.StringProperty()
+
+
+def GetSingletonMeasureKey(hydroidUnitId=HYDROID_UNIT_ID):
+    return ndb.Key(Measure, '1', parent=GetHydroidUnitKey(hydroidUnitId))
+
+
+def GetSingletonMeasure(hydroidUnitId=HYDROID_UNIT_ID):
+    # get the singleton measure - returns a constant valid non-empty measure object
+    measure = GetSingletonMeasureKey(hydroidUnitId).get()
+    if not measure:
+        measure = Measure(key=GetSingletonMeasureKey(hydroidUnitId))
+        measure.historyListCid = 0   # history list change id
+        measure.put()
+        measure = GetSingletonMeasureKey(hydroidUnitId).get()  # get it right back
+    return measure
 
 
 class Measure(ndb.Model):
@@ -172,6 +187,15 @@ class OnUpload(blobstore_handlers.BlobstoreUploadHandler):
         runs = int(self.request.headers['runs'])
         blobInfo = self.get_uploads()[0]
 
+        if ticketNo == 0:       # transient status image
+            measure = GetSingletonMeasure()
+            if measure.imageBlobKey:
+                blobstore.delete(measure.imageBlobKey)
+            measure.imageBlobKey = blobInfo.key()
+            measure.imageBlobURL = images.get_serving_url(measure.imageBlobKey)
+            measure.put()
+            return
+
         # store the blob key
         if runs == 1:       # single instance data is stored in the delivery data itself
             delivered = GetDeliveryItemForTicket(ticketNo, HYDROID_UNIT_ID)
@@ -230,9 +254,14 @@ def DirtyAllStates():
 
 
 def QueryChangeState():
+    measure = GetSingletonMeasure()
     ticket = GetSingletonTicket()
-    return {'activeStateCid': ticket.pendingStateCid,
-            'historyListCid': ticket.historyListCid,
+    return {
+        'lastRpiTime': measure.time,
+        'lastRpiTemperature': measure.temperature,
+        'lastRpiMoisture': measure.moisture,
+        'activeStateCid': ticket.pendingStateCid,
+        'historyListCid': ticket.historyListCid,
     }
 
 
@@ -297,7 +326,7 @@ def ConfirmDelivery(jsonRequest):
         delivered.finished = jsonRequest['finished'] in '1'
         delivered.deliveryDate = int(jsonRequest['deliveryDate'])
         delivered.deliveryNote = jsonRequest['deliveryNote']
-        if runs == 1 and runid == 1: # single instance data is stored in the delivery data itself
+        if runs == 1 and runid == 1:  # single instance data is stored in the delivery data itself
             delivered.temperature = int(jsonRequest['temperature'])
             delivered.moisture = int(jsonRequest['moisture'])
         delivered.put()
@@ -402,11 +431,16 @@ def InvalidateTimedOutJobs():
 
 
 def PollServer(jsonRequest):
+    measure = GetSingletonMeasure()
+    measure.time = jsonRequest['time']
+    measure.temperature = jsonRequest['temperature']
+    measure.moisture = jsonRequest['moisture']
+    measure.put()
+
     # return the request to rpi; jobs are queued, other parameters are serviced
     # in the subsequent poll call
     return {
-        'envRead': '1',
-        'getPhoto': '1',
+        'getPhoto': '0',        # '0' or '1'
         'activeJobs': FetchActiveTaskList()
     }
 
@@ -494,6 +528,7 @@ def FetchMeasures(jsonRequest):
 def ProcureUploadURL():
     uploadUrl = blobstore.create_upload_url('/app/upload')
     return {'url': cgi.escape(uploadUrl)}
+
 
 
 main = webapp2.WSGIApplication([

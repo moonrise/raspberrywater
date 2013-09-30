@@ -165,6 +165,13 @@ var squirtMain = (function () {
     }
 
     function onQueryChangeState(jsonResponse) {
+        var formatter = "<span style='font-weight: lighter; color: darkblue'><i>%s, %dF, %d%</i></span>";
+        var text = sprintf(formatter,
+                            squirtCommon.formatDateShort(jsonResponse.lastRpiTime),
+                            squirtCommon.toFahrenheit(jsonResponse.lastRpiTemperature),
+                            squirtCommon.toMoisturePercent(jsonResponse.lastRpiMoisture));
+        $("#rpi-last-beat").html(text);
+
         var activeStateCid = jsonResponse.activeStateCid;
         if (activeStateCid != myActiveStateCid) {
             myActiveStateCid = activeStateCid;

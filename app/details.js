@@ -234,16 +234,6 @@ var squirtDetails = (function () {
         updateRunId();
     }
 
-    function toFahrenheit(count) {
-        var milliVolts = count * (3300.0 / 1023.0);
-        var celsius = ((milliVolts - 100.0) / 10.0) - 40.0;
-        return (celsius * 9.0/5.0) + 32.0;
-    }
-
-    function toMoisturePercent(count) {
-        return Math.min(100, count/800 * 100);  // 800 is saturation point (submerged in water)
-    }
-
     function buildTableRows(dataItems) {
         var htmlItems = [];
 
@@ -255,14 +245,14 @@ var squirtDetails = (function () {
                 e.push('<td>-na-</td>');
             }
             else {
-                e.push(sprintf('<td>%dF (%d)</td>', toFahrenheit(item.temperature), item.temperature));
+                e.push(sprintf('<td>%dF (%d)</td>', squirtCommon.toFahrenheit(item.temperature), item.temperature));
             }
 
             if (item.moisture < 0) {
                 e.push('<td>-na-</td>');
             }
             else {
-                e.push(sprintf('<td>%d% (%d)</td>', toMoisturePercent(item.moisture), item.moisture));
+                e.push(sprintf('<td>%d% (%d)</td>', squirtCommon.toMoisturePercent(item.moisture), item.moisture));
             }
 
             e.push(sprintf('<td>%s&nbsp;</td>',
