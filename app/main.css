@@ -3,6 +3,10 @@
 .ui-body-c, .ui-overlay-c { text-shadow:0 0 0; }
 */
 
+.ui-icon-camera {
+    background-image: url("images2/camera.png");
+}
+
 .section-div {
     border: 1px solid #456f9a;
     padding: 0px;

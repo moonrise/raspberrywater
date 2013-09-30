@@ -25,7 +25,7 @@ var squirtMain = (function () {
         $("#request-squirt-button").click(onSquirtRequest);
 
         // simulate squirt delivery handler
-        $("#simulate-squirt-delivery-button").click(onSimulateSquirtDelivery);
+        $("#update-photo-button").click(onUpdatePhotoButton);
 
         // refresh handler
         $("#refresh-button").click(onRefreshButton);
@@ -280,6 +280,11 @@ var squirtMain = (function () {
         activateTransientPolling();
     }
 
+    function onUpdatePhotoButton() {
+    }
+
+    /*
+    with multiple request supports, it is not easy to support simulation any longer...
     function onSimulateSquirtDelivery() {
         $.ajax(squirtCommon.buildJsonAPIRequest("confirmDelivery",
             {
@@ -294,6 +299,7 @@ var squirtMain = (function () {
             },
             null, null, onSimulateSquirtDeliveryDone));
     }
+    */
 
     function onSimulateSquirtDeliveryDone(xhr, status) {
         updateRemoteState();
