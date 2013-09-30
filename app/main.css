@@ -79,6 +79,14 @@
     color: #0e1168;
 }
 
+.section-line-value-with-icon {
+    display: inline-block;
+    margin-top: 8px;
+    vertical-align: middle;
+    font-size: 1em;
+    color: #0e1168;
+}
+
 .ui-table-columntoggle-btn {
     display: none !important;
 }
