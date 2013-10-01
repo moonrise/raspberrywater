@@ -9,9 +9,11 @@ var squirtDetails = (function () {
 
     var historyItems;
     var currentIndex = -1;      // varies as user navigates
+    var currentItem;            // for convenience and efficiency
 
     var currentDataItems
-    var currentRunid = -1;
+    var currentRunId = -1;
+    var stopPlayMode = false
 
 
     function onDetailsPageInit(event) {
@@ -19,15 +21,14 @@ var squirtDetails = (function () {
         $("#details-prev-button").click(onDetailsPrev);
         $("#details-next-button").click(onDetailsNext);
         $("#details-play-button").click(onDetailsPlay);
-        $("#details-cancel-button").click(onDetailsCancel);
         $("#details-refresh-button").click(onDetailsRefresh);
+        $("#delete-confirm-button").click(onDeleteConfirm);
 
         // table row selection handler
         $("#data-table").on('click', 'tr', onDataTableRowClick);
 
         currentTicket = $(this).data("url").replace(/.*ticket=/, "");
-        currentIndex = -1;
-        updateButtonStates();
+        setCurrentIndex(-1);
         onDetailsRefresh();
     }
 
@@ -35,90 +36,121 @@ var squirtDetails = (function () {
         squirtCommon.fetchActiveAndHistoricalList(30, onFetchAllListOK);
     }
 
+    function setCurrentIndex(index) {
+        currentIndex = index;
+        if (currentIndex < 0) {
+            currentItem = null;
+        }
+        else if (currentIndex < historyItems.length) {
+            currentItem = historyItems[currentIndex];
+        }
+
+        updateButtonStates();
+        updateCurrentIndexDetails();
+    }
+
     function onDetailsNext() {
         if (currentIndex > 0) {
-            currentIndex--;
-            updateButtonStates();
-            updateCurrentIndexDetails();
+            setCurrentIndex(currentIndex-1);
         }
     }
 
     function onDetailsPrev() {
         if (currentIndex < historyItems.length -1) {
-            currentIndex++;
-            updateButtonStates();
-            updateCurrentIndexDetails()
+            setCurrentIndex(currentIndex+1);
         }
     }
 
     function onDetailsPlay() {
-        if (currentItem == null || currentItem.runsFinished < 2) {
-            return;
-        }
-
-        // start
-        currentRunid = 1;
+        stopPlayMode = false;
+        currentRunId = 1;
         updatePhotoOnTimer();
     }
 
-    function onDetailsCancel() {
-        if (currentItem == null || currentItem.finished) {
-            return;
+    function onDeleteConfirm() {
+        if (currentItem.finished) {
+            $.ajax(squirtCommon.buildJsonAPIRequest("deleteJob", { 'ticket': currentItem.ticket }));
         }
-
-        // request cancel - hope it is honored
-        $.ajax(squirtCommon.buildJsonAPIRequest("cancelJob", {
-            'ticket': currentItem.ticket }));
+        else {
+            $.ajax(squirtCommon.buildJsonAPIRequest("cancelJob", { 'ticket': currentItem.ticket }));
+        }
     }
 
     function updatePhotoOnTimer() {
+        if (stopPlayMode) {
+            return;
+        }
+
         updatePhotoSection();
 
-        if (currentRunid < currentItem.runsFinished) {
-            currentRunid++;
+        if (currentRunId < currentItem.runsFinished) {
+            currentRunId++;
             setTimeout(updatePhotoOnTimer, 500);
         }
     }
-
-
 
     function onDataTableRowClick(event) {
         event.preventDefault();
 
         // it is assumed that the runid is the text from the first column
-        currentRunid = parseInt(this.innerText);
-        updateRunId();
+        currentRunId = parseInt(this.innerText);
+        stopPlayMode = true;
+        validateRunIdAndUpdatePhotoSection();
     }
 
-    function updateRunId() {
-        if (currentItem != null && (currentRunid < 1 || currentRunid > currentItem.runs)) {
-            currentRunid = 1;
+    function validateRunIdAndUpdatePhotoSection() {
+        if (currentItem == null || currentItem.runsFinished < 1 || (currentItem.runs > 1 && currentDataItems == null)) {
+            currentRunId = 0;
+        }
+        else if (currentRunId < 1 || currentRunId > currentItem.runsFinished) {     // boundary check
+            currentRunId = 1;
         }
         updatePhotoSection();
     }
 
     function updateButtonStates() {
-        // todo: won't work - add/remove class may need to look if it's there or not first?!!
-        return;
+        if (currentItem == null) {
+            $("#details-prev-button").addClass('ui-disabled');
+            $("#details-next-button").addClass('ui-disabled');
+            $("#details-play-button").addClass('ui-disabled');
+            $("#details-delete-button").addClass('ui-disabled');
+            return;
+        }
 
+        // prev/next buttons
         var totalItems = historyItems.length;
-
-        if (totalItems <= 0 || currentIndex == 0) {
+        if (currentIndex == 0) {
             $("#details-next-button").addClass('ui-disabled');
         }
         else {
             $("#details-next-button").removeClass('ui-disabled');
         }
 
-        if (totalItems <= 0 || currentIndex >= totalItems-1) {
+        if (currentIndex >= totalItems-1) {
             $("#details-prev-button").addClass('ui-disabled');
         }
         else {
             $("#details-prev-button").removeClass('ui-disabled');
         }
 
-        $("#details-prev-button").button('refresh');
-        $("#details-next-button").button('refresh');
+        // play button
+        if (currentItem.runsFinished < 2) {
+            $("#details-play-button").addClass('ui-disabled');
+        }
+        else {
+            $("#details-play-button").removeClass('ui-disabled');
+        }
+
+        // delete/cancel button
+        $("#details-delete-button").removeClass('ui-disabled');
+        if (currentItem.finished) {
+            $("#details-delete-button .ui-btn-text").html("delete");
+            $("#delete-prompt-message").text(sprintf("Are you sure you want to delete task %d?", currentItem.ticket));
+        }
+        else {
+            $("#details-delete-button .ui-btn-text").html("cancel");
+            $("#delete-prompt-message").text(sprintf("Are you sure you want to cancel currently running task %d?", currentItem.ticket));
+        }
     }
 
     function onFetchAllListOK(jsonResponse) {
@@ -126,34 +158,29 @@ var squirtDetails = (function () {
         historyItems = jsonResponse.list;
 
         if (currentTicket <= 0 && historyItems.length > 0) {
-            currentIndex = 0;   // most recent
-            updateButtonStates();
+            setCurrentIndex(0); // most recent
         }
         // locate the current index of the initial ticket
         else if (currentIndex < 0) {
             $.each(historyItems, function(index, value) {
                 if (value.ticket == currentTicket) {
-                    currentIndex = index;
-                    updateButtonStates();
+                    setCurrentIndex(index); // most recent
                     return false;  // breaking out of the loop since we're within this function scope
                 }
             });
         }
-
-        if (currentIndex >= 0) {
-            updateCurrentIndexDetails()
-        }
     }
 
     function updateCurrentIndexDetails() {
-        currentItem = historyItems[currentIndex];
-        updateDetailsSection(currentItem);
-        updateDataTableSection(currentItem);
+        if (currentItem != null) {
+            updateDetailsSection(currentItem);
+            updateDataTableSection(currentItem);
+        }
     }
 
     function updateDetailsSection(item) {
         // update title area
-        var detailsHeader = sprintf(formatter, "details", sprintf(" (%d tickets fetched)", historyItems.length));
+        var detailsHeader = sprintf(formatter, "details", sprintf(" (%d/%d fetched tasks)", currentIndex+1, historyItems.length));
         $("#details-bar .ui-btn-text").html(detailsHeader); // $(#details-bar).html() destroys the style
 
         // update detail area
@@ -169,14 +196,21 @@ var squirtDetails = (function () {
     }
 
     function updatePhotoSection() {
-        var photoHeader = sprintf(formatter, "photo", sprintf(" - %d/%d", currentRunid, currentItem.runsFinished));
-        var debugHeader = sprintf(formatter, "photo debug", sprintf(" - %d/%d", currentRunid, currentItem.runsFinished));
+        const PHOTO_TITLE = "photo";
+        const PHOTO_DEBUG_TITLE = "photo debug";
+
+        var photoHeader = PHOTO_TITLE;
+        var debugHeader = PHOTO_DEBUG_TITLE;
+
+        if (currentRunId > 0) {
+            photoHeader = sprintf(formatter, "photo", sprintf(" - %d/%d", currentRunId, currentItem.runsFinished));
+            debugHeader = sprintf(formatter, "photo debug", sprintf(" - %d/%d", currentRunId, currentItem.runsFinished));
+        }
+
         $("#photo-details-bar .ui-btn-text").html(photoHeader);
         $("#debug-details-bar .ui-btn-text").html(debugHeader);
 
-        if (currentItem == null || (currentItem.runs > 1 && currentDataItems == null)) {
-            $("#details-blob-key").text("none");
-            $("#details-blob-url").text("none");
+        if (currentRunId < 1) {
             displayNoImageAvailable();
             return;
         }
@@ -187,8 +221,8 @@ var squirtDetails = (function () {
             imageBlobKey = currentItem.imageBlobKey;
             imageBlobURL = currentItem.imageBlobURL;
         }
-        else if (currentRunid >= 1 && currentRunid <= currentItem.runs) {
-            var index = parseInt(currentRunid) - 1;
+        else {
+            var index = currentRunId - 1;
             imageBlobKey = currentDataItems[index].imageBlobKey;
             imageBlobURL = currentDataItems[index].imageBlobURL;
         }
@@ -231,7 +265,7 @@ var squirtDetails = (function () {
         currentDataItems = dataItems
         $("#table-body").html(buildTableRows(dataItems));
         $("#data-table").table('refresh');
-        updateRunId();
+        validateRunIdAndUpdatePhotoSection();
     }
 
     function buildTableRows(dataItems) {
@@ -268,6 +302,8 @@ var squirtDetails = (function () {
     function displayNoImageAvailable() {
         $("#details-image").attr('src', "images2/not-available-320.png");
         $("#details-image").attr('alt', "No photo is available");
+        $("#details-blob-key").text("none");
+        $("#details-blob-url").text("none");
     }
 
     //

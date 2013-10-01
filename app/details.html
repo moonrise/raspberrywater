@@ -29,7 +29,9 @@
             <a href="#" id="details-prev-button" data-role="button" data-icon="arrow-l">prev</a>
             <a href="#" id="details-next-button" data-role="button" data-icon="arrow-r">next</a>
             <a href="#" id="details-play-button" data-role="button" data-icon="grid">play</a>
-            <a href="#" id="details-cancel-button" data-role="button" data-icon="delete">cancel</a>
+            <a href="#delete-prompt" id="details-delete-button" data-rel="popup" data-position-to="window"
+               data-role="button" data-inline="true" data-transition="pop" data-icon="delete" data-theme="e"
+               style="display: inline">delete</a>
             <a href="#" id="details-refresh-button" data-role="button" data-icon="refresh">refresh</a>
         </div>
 
@@ -104,7 +106,22 @@
             </div>
         </div>
     </div>
-</div>
 
+    <div data-role="popup" id="delete-prompt" data-overlay-theme="a" data-theme="e" data-dismissible="false"
+         style="max-width:300px;" class="ui-corner-all">
+        <div data-role="header" data-theme="e" class="ui-corner-top">
+            <h5 style="font-weight: normal">confirm</h5>
+        </div>
+        <div data-role="content" data-theme="e" class="ui-corner-bottom ui-content">
+            <h3 id="delete-prompt-message" class="ui-title" style="font-normal: lighter">Are you sure?</h3>
+            <div style="max-width: 170px;margin: 0 auto;padding-top: 5px">
+                <a href="#" id="delete-confirm-button" data-role="button" data-inline="true" data-mini="true" data-rel="back"
+                   data-transition="flow" data-theme="e" style="width: 70px">Yes</a>
+                <a href="#" data-role="button" data-inline="true" data-mini="true" data-rel="back"
+                   data-theme="a" style="width: 70px;">No</a>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
