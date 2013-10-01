@@ -266,7 +266,7 @@ var squirtDetails = (function () {
     }
 
     function displayNoImageAvailable() {
-        $("#details-image").attr('src', "images2/not-available-128.png");
+        $("#details-image").attr('src', "images2/not-available-320.png");
         $("#details-image").attr('alt', "No photo is available");
     }
 

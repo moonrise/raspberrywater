@@ -88,14 +88,16 @@
 }
 
 .photo-box {
-    padding: 5px 5px 2px;
+    padding: 0px 0px;
     overflow: hidden;
-    border: 1px solid grey;
+    text-align: center;
+    border: 1px none grey;
 }
 
 .ui-table-columntoggle-btn {
     display: none !important;
 }
+
 .ui-table th,
 .ui-table td {
     line-height: 1.5em;

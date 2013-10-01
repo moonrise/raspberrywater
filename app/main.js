@@ -31,7 +31,7 @@ var squirtMain = (function () {
 
         // simulate squirt delivery handler
         $("#update-photo-button").click(onUpdatePhotoButton);
-        $("#rpi-photo").attr('src', "images2/not-available-128.png");
+        $("#rpi-photo").attr('src', "images2/not-available-320.png");
         $("#rpi-photo").attr('alt', "No photo is available");
 
         // refresh handler
