@@ -175,6 +175,8 @@ class JsonAPI(webapp2.RequestHandler):
             self.response.write(json.dumps(FetchMeasures(jsonRequest)))
         elif command == "procureUploadURL":
             self.response.write(json.dumps(ProcureUploadURL()))
+        elif command == "deleteJob":
+            self.response.write(json.dumps(RequestJobDelete(jsonRequest)))
         elif command == "cancelJob":
             self.response.write(json.dumps(RequestJobCancel(jsonRequest)))
         else:
@@ -189,6 +191,8 @@ class OnUpload(blobstore_handlers.BlobstoreUploadHandler):
 
         if ticketNo == 0:       # transient status image
             measure = GetSingletonMeasure()
+            if measure.imageBlobURL:
+                images.delete_serving_url(measure.imageBlobKey)
             if measure.imageBlobKey:
                 blobstore.delete(measure.imageBlobKey)
             measure.imageBlobKey = blobInfo.key()
@@ -296,6 +300,32 @@ def SubmitSquirtRequest(jsonRequest):
     # now submit the request by adding to the active list
     AddToHistory(HYDROID_UNIT_ID, jsonRequest)
     return {}
+
+
+def RequestJobDelete(jsonRequest):
+    ticketToDelete = jsonRequest['ticket']
+    query = Delivery.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)) \
+        .filter(Delivery.finished == True) \
+        .filter(Delivery.ticket == ticketToDelete)
+
+    deleteTarget = None
+    for delivery in query:
+        deleteTarget = delivery
+
+    if deleteTarget:
+        if deleteTarget.imageBlobURL:
+            images.delete_serving_url(deleteTarget.imageBlobKey)
+            # images.delete_serving_url_async(deleteTarget.imageBlobKey)
+        if deleteTarget.imageBlobKey:
+            blobstore.delete(deleteTarget.imageBlobKey)
+            # blobstore.delete_async(deleteTarget.imageBlobKey)
+        # k = deleteTarget.put() # k.delete()
+        key = ndb.Key(Delivery, ticketToDelete, parent=GetHydroidUnitKey(HYDROID_UNIT_ID))
+        key.delete()
+        # key.delete_async()
+        DirtyHistoryList()
+
+    #todo: delete blobs from the measure list
 
 
 def RequestJobCancel(jsonRequest):
