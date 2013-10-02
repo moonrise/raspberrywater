@@ -69,11 +69,16 @@ var squirtDetails = (function () {
 
     function onDeleteConfirm() {
         if (currentItem.finished) {
-            $.ajax(squirtCommon.buildJsonAPIRequest("deleteJob", { 'ticket': currentItem.ticket }));
+            $.ajax(squirtCommon.buildJsonAPIRequest("deleteJob", { 'ticket': currentItem.ticket }, onDeleteOK));
         }
         else {
             $.ajax(squirtCommon.buildJsonAPIRequest("cancelJob", { 'ticket': currentItem.ticket }));
         }
+    }
+
+    function onDeleteOK(jsonResponse) {
+        currentTicket = -1;
+        onDetailsRefresh();
     }
 
     function updatePhotoOnTimer() {
@@ -150,7 +155,9 @@ var squirtDetails = (function () {
         }
         if (currentItem.finished) {
             $("#details-delete-button .ui-btn-text").html("delete");
-            $("#delete-prompt-message").text(sprintf("Are you sure you want to delete task %d?", currentItem.ticket));
+            $("#delete-prompt-message").text(
+                sprintf("Are you sure you want to delete task %d (delete can take a few seconds for " +
+                    "this page to reflect the deletion)?", currentItem.ticket));
         }
         else {
             $("#details-delete-button .ui-btn-text").html("cancel");
@@ -185,7 +192,8 @@ var squirtDetails = (function () {
 
     function updateDetailsSection(item) {
         // update title area
-        var detailsHeader = sprintf(formatter, "details", sprintf(" (%d/%d fetched tasks)", currentIndex+1, historyItems.length));
+        var detailsHeader = sprintf(formatter, "details", sprintf(" (%d: %d/%d fetched tasks)",
+                                                currentItem.ticket, currentIndex+1, historyItems.length));
         $("#details-bar .ui-btn-text").html(detailsHeader); // $(#details-bar).html() destroys the style
 
         // update detail area

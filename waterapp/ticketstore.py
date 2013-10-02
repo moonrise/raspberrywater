@@ -337,8 +337,6 @@ def RequestJobDelete(jsonRequest):
 
         DirtyHistoryList()
 
-    #todo: delete blobs from the measure list
-
 
 def RequestJobCancel(jsonRequest):
     ticketToCancel = jsonRequest['ticket']
