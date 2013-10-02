@@ -168,12 +168,12 @@ var squirtDetails = (function () {
         }
 
         // delete/cancel button
-        if (currentItem.ticket <= 25) {  // protect them for demo
-            $("#details-delete-button").addClass('ui-disabled');
-        }
-        else {
+//        if (currentItem.ticket <= 25) {  // protect them for demo
+//            $("#details-delete-button").addClass('ui-disabled');
+//        }
+//        else {
             $("#details-delete-button").removeClass('ui-disabled');
-        }
+//        }
         if (currentItem.finished) {
             $("#details-delete-button .ui-btn-text").html("delete");
             $("#delete-prompt-message").text(
