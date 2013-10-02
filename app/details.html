@@ -30,7 +30,7 @@
             <a href="#" id="details-prev-button" data-role="button" data-icon="arrow-l">prev</a>
             <a href="#" id="details-next-button" data-role="button" data-icon="arrow-r">next</a>
             <a href="#" id="details-play-button" data-role="button" data-icon="grid">play</a>
-            <a href="#delete-prompt" id="details-delete-button" data-rel="popup" data-position-to="window"
+            <a href="#delete-prompt" id="details-delete-button" data-rel="popup" data-position-to="#details-page"
                data-role="button" data-inline="true" data-transition="pop" data-icon="delete" data-theme="e"
                style="display: inline">delete</a>
         </div>
@@ -119,6 +119,18 @@
                    data-transition="flow" data-theme="e" style="width: 70px">Yes</a>
                 <a href="#" data-role="button" data-inline="true" data-mini="true" data-rel="back"
                    data-theme="a" style="width: 70px;">No</a>
+            </div>
+        </div>
+    </div>
+
+    <div data-role="popup" id="progress-popup" data-overlay-theme="a" data-theme="e" data-dismissible="false"
+         style="max-width:300px;min-width: 250px" class="ui-corner-all">
+        <div data-role="header" data-theme="e" class="ui-corner-top">
+            <h5 style="font-weight: normal">progress</h5>
+        </div>
+        <div data-role="content" data-theme="e" class="ui-corner-bottom ui-content">
+            <div style="max-width: 170px;margin: 0 auto;padding: 15px">
+                <h3 id="progress-popup-message" class="ui-title" style="font-normal: lighter">in progress...</h3>
             </div>
         </div>
     </div>

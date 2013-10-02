@@ -15,6 +15,8 @@ var squirtDetails = (function () {
     var currentRunId = -1;
     var stopPlayMode = false
 
+    var bringDownProgressBar;
+
 
     function onDetailsPageInit(event) {
         // refresh handler
@@ -61,6 +63,21 @@ var squirtDetails = (function () {
         }
     }
 
+    function displayBlockedDialog(message) {
+        if (message != null && message.length > 0) {
+            bringDownProgressBar = true;
+            updateBlockedDialogMessage(message);
+            $("#progress-popup").popup("open", { positionTo: '#details-page'});
+        }
+        else {
+            $("#progress-popup").popup("close");
+        }
+    }
+
+    function updateBlockedDialogMessage(message) {
+        $("#progress-popup-message").html(message);
+    }
+
     function onDetailsPlay() {
         stopPlayMode = false;
         currentRunId = 1;
@@ -69,6 +86,9 @@ var squirtDetails = (function () {
 
     function onDeleteConfirm() {
         if (currentItem.finished) {
+            setTimeout(function() {     // since we can't nest popups
+                displayBlockedDialog(sprintf("deleting task %d...", currentItem.ticket));
+            }, 500);
             $.ajax(squirtCommon.buildJsonAPIRequest("deleteJob", { 'ticket': currentItem.ticket }, onDeleteOK));
         }
         else {
@@ -77,6 +97,7 @@ var squirtDetails = (function () {
     }
 
     function onDeleteOK(jsonResponse) {
+        updateBlockedDialogMessage("Deleted. Updating the current view...");
         currentTicket = -1;
         onDetailsRefresh();
     }
@@ -180,6 +201,11 @@ var squirtDetails = (function () {
                     return false;  // breaking out of the loop since we're within this function scope
                 }
             });
+        }
+
+        if (bringDownProgressBar) {
+            bringDownProgressBar = false;
+            displayBlockedDialog(null);
         }
     }
 
