@@ -142,7 +142,12 @@ var squirtDetails = (function () {
         }
 
         // delete/cancel button
-        $("#details-delete-button").removeClass('ui-disabled');
+        if (currentItem.ticket <= 25) {  // protect them for demo
+            $("#details-delete-button").addClass('ui-disabled');
+        }
+        else {
+            $("#details-delete-button").removeClass('ui-disabled');
+        }
         if (currentItem.finished) {
             $("#details-delete-button .ui-btn-text").html("delete");
             $("#delete-prompt-message").text(sprintf("Are you sure you want to delete task %d?", currentItem.ticket));
