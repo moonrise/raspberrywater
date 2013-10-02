@@ -18,10 +18,11 @@
 
 <body>
 
-<div data-role="page" id="details-page" data-theme="e">
+<div data-role="page" id="doc-page" data-theme="e" style="max-width: 750px">
     <div data-role="header" data-theme="e">
-        <a data-rel="back" data-icon="arrow-l">home</a>
+        <a data-rel="back" data-icon="home">home</a>
         <h3>hydroid - details</h3>
+        <a id="details-refresh-button" data-role="button" data-icon="refresh" class="ui-btn-right">refresh</a>
     </div>
 
     <div data-role="content">
@@ -32,7 +33,6 @@
             <a href="#delete-prompt" id="details-delete-button" data-rel="popup" data-position-to="window"
                data-role="button" data-inline="true" data-transition="pop" data-icon="delete" data-theme="e"
                style="display: inline">delete</a>
-            <a href="#" id="details-refresh-button" data-role="button" data-icon="refresh">refresh</a>
         </div>
 
         <div id="details-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"

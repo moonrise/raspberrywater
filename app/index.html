@@ -69,24 +69,23 @@
 
 <body>
 
-<div data-role="page" id="main-page" data-theme="e">
+<div data-role="page" id="doc-page" data-theme="e" style="max-width: 750px">
     <div data-role="header" data-theme="e">
-        <a href="doc/doc.html" data-transition="slide" data-direction="reverse"
-           data-icon="arrow-l" class="ui-btn-left">info</a>
-        <a id="details-button" data-icon="arrow-r" class="ui-btn-right">details</a>
+        <div data-type="horizontal" data-role="controlgroup" class="ui-btn-left">
+            <a href="doc/doc.html" data-transition="slide" data-direction="reverse"
+               data-icon="info" data-mini="true" data-role="button" data-iconpos="notext">info</a>
+            <a id="details-button" data-role="button" data-icon="grid" data-mini="true">details</a>
+        </div>
+        <a id="refresh-button" data-role="button" data-icon="refresh" data-iconpos="left"
+           data-mini="true" class="ui-btn-right">refresh</a>
         <h3>hydroid</h3>
     </div>
 
     <div data-role="content">
-        <div data-role="controlgroup" data-type="horizontal" data-mini="true">
-            <a id="refresh-button" data-role="button" data-icon="refresh" data-iconpos="left"
-               data-mini="true">refresh</a>
-        </div>
-
         <!--<p id="show-text"></p>-->
 
         <div id="rpi-bar" data-role="collapsible" data-mini="true" data-theme="b" data-content-theme="b"
-             data-collapsed="false" data-corners="false" style="margin-top:20px">
+             data-collapsed="false" data-corners="false">
             <legend>raspberry pi</legend>
 
             <a id="update-photo-button" style="display: inline-block" data-role="button" data-icon="camera"
