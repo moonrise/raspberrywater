@@ -323,6 +323,18 @@ def RequestJobDelete(jsonRequest):
         key = ndb.Key(Delivery, ticketToDelete, parent=GetHydroidUnitKey(HYDROID_UNIT_ID))
         key.delete()
         # key.delete_async()
+
+        # delete the measure list if any - we can query for runs > 1, but will do it uniform way
+        measureQuery = Measure.query(ancestor=GetHydroidUnitKey(HYDROID_UNIT_ID)) \
+            .filter(Measure.ticket == ticketToDelete)
+        for m in measureQuery:
+            if m.imageBlobURL:
+                images.delete_serving_url(m.imageBlobKey)
+            if m.imageBlobKey:
+                blobstore.delete(m.imageBlobKey)
+            key = ndb.Key(Measure, m.runid, parent=GetHydroidUnitKey(HYDROID_UNIT_ID))
+            key.delete()
+
         DirtyHistoryList()
 
     #todo: delete blobs from the measure list
