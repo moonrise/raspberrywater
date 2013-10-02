@@ -210,7 +210,7 @@ def testADC():
         tempf = (tempc * 9./5.) + 32
 
         mcount = readadc(AC_MOISTURE)
-        moistp = min(100, mcount / 777. * 100)
+        moistp = min(100, mcount / 1023. * 100)
 
         print "temp: %dF, count: %d, mosit: %d%%, count: %d" % (tempf, tcount, moistp, mcount)
         sleep(1)

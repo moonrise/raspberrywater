@@ -238,7 +238,7 @@ var squirtCommon = (function () {
     }
 
     function toMoisturePercent(count) {
-        return Math.min(100, count/800 * 100);  // 800 is saturation point (submerged in water)
+        return Math.min(100, count/1023 * 100);  // 800 is saturation point (submerged in water)
     }
 
     //
