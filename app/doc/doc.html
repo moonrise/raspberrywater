@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>hydroid document</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="../jquery.mobile-1.3.2.css"/>
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="../jquery.mobile-1.3.2.js"></script>
+</head>
+<body>
+
+<div data-role="page" id="doc-page" data-theme="e">
+    <div data-role="header" data-theme="e">
+        <!--<a data-rel="back" data-icon="arrow-r" data-direction="reverse" class="ui-btn-right">home</a>-->
+        <a href="../index.html" data-transition="slide" data-icon="arrow-r" class="ui-btn-right">home</a>
+        <h3>hydroid - document</h3>
+    </div>
+
+    <div data-role="content">
+        <h3>Hydroid</h3>
+        Hydroid is a device built on Raspberry PI that is capable of watering plants
+        and reporting the plant status via webcam along with environment variables like
+        ambient temperature and soil moisture. The user interface to hydroid is built
+        with mobility in mind over cloud infrastructure provided by Google Application
+        server. Unexpectedly from the initial intent, the scheduling feature turned out
+        to be handsomely suitable for remote time lapse photo series as well.
+
+        <h4>Schematics</h4>
+        Hydroid system is made of three major components:
+        <ul>
+        <li>hydroid hardware device built on Raspberry PI</li>
+        <li>client applications that are deployed to mobile device browsers</li>
+        <li>server application built on Google Application Engine</li>
+        </ul>
+
+        The communication protocol between these components are HTTP. See the schematic diagram below as an overview.
+        <image src="/doc/images/hydroid-schematic.png" style="margin: 10px"/>
+
+        <h4>features - hardware</h4>
+        Hydroid hardware is illustrated in the photo below along with the circuit diagram.
+        <ul>
+        <li>solenoid is released to dispense the water between 1 and 5 drops per user request.</li>
+        <li>manual button can be pressed in the circuit board to release one drop of water</li>
+        <li>blinking LED tells the system running status</li>
+        <li>ambient temperature is obtained upon request</li>
+        <li>soil moisture is read between 0% and 100% if the sensor is inserted in the soil. 0% is reported if the sensor is out in the air while 100% is expected if the sensor is immersed in water.</li>
+        <li>MCP3800 AD converter supports upto 8 channels of analog inputs even though only two channels are utilized for temperature and moisture sensing</li>
+        <li>camera is equipped to upload a photo taken on demand</li>
+        <li>the system automatically recovers on network failure and system restarts</li>
+        <li>the system is implemented with python 2.7 with a few additional modules imported to support HTTP/Json and imaging support</li>
+        <li>wireless network support</li>
+        </ul>
+
+        <image src="/doc/images/hydroid-setup.jpg" style="margin: 10px"/>
+        <image src="/doc/images/circuit-photo.jpg" style="margin: 10px"/>
+        <image src="/doc/images/hydroid-circuit.png" style="margin: 10px"/>
+
+        <h4>features - client</h4>
+        The client application is accessed from any browsers by pointing to “http://waterthem.appspot.com/index.html”. The application is written in HTML5/JavaScript/CSS to service wide variety of platforms. It is optimally designed and tested for Android and IPhone devices. It should work on any devices that jQueryMobile is supported. A photo taken from hydroid system is shown below with the timestamp on the top left.
+        <ul>
+        <li>the home screen reports the last reported hydroid heart-beat time along with the temperature and soil moisture</li>
+        <li>a photo (320x240) can be requested anytime with a click of a button (photo status are not automatically refreshed to save bandwidth)</li>
+        <li>a watering request can be made from the request panel with scheduling capability</li>
+        <li>active tasks are reported in the active tasks panel</li>
+        <li>most recent N number of historical jobs are listed in the history panel. clicking on an item in the list will take you to the details panel</li>
+        <li>each refresh button adds 60 seconds of polling with 1 second interval to refresh the status of the screen</li>
+        <li>In details page, a series of photos can be played with 0.5 second interval if multiple photos are available. This can be useful for time lapse photo replay.</li>
+        <li>a scheduled or running task can be can canceled in the details page</li>
+        <li>a completed task can be deleted in the details page</li>
+        </ul>
+
+        <image src="/doc/images/from-hydroid-lens.jpg" style="margin: 10px"/>
+
+        <h4>features - server</h4>
+        Server component is built on Google Application Engine with Python runtime.
+        <ul>
+        <li>highly scalable and reliable application service framework</li>
+        <li>free with daily data usage quota; pay as you go if you reach the quota</li>
+        <li>the server code can be re-deployed anytime without service interruption</li>
+        <li>the server admin, runtime statistics are readily available from GAE admin utilities</li>
+        <li>Google’s datastore is used for data storage (not SQL like) and to support the synchronization of multiple requests from clients and hydroid devices</li>
+        <li>photo data is separately managed by blob store with image url service</li>
+        <li>HTTP/JSON based API set is provided for the clients and hydroid units</li>
+        <li>task state management: pending, waiting, running, canceled, bumped, timed out, finished</li>
+        <li>certain client requests are coalesced not to flood the system</li>
+        <li>change state management so that large payloads are transferred only when needed</li>
+        <li>designed to handle multiple hydroid units</li>
+        </ul>
+
+        <h4>postmortem</h4>
+        The system works as intended. Improvements can be made in a number of areas.
+        <ul>
+        <li>The entire system is based on HTTP protocol. The responsiveness of the communication between three major components is a challenge with periodic polling. Long poll (comet) can solve this problem in most areas, but this solution or similar was not implemented because Google App Engine framework does not support the long held connections. There could be some workaround to achieve similar results.</li>
+        <li>Visual feedback of the hydroid sites can be enhanced with video streaming. This solution turned out to be a challenge with Google App Engine because it does not support streaming (HTTP multipart post) in general. Video uploading and playback can be a workaround solution even though it may not be real time feedback.</li>
+        <li>It will be nice to have the available water level reported with warnings if it reaches below certain threshold. Currently, the photo taken can give you some idea how much water remains. Further the confirmation of the water delivery can be explicitly noted if we can measure the water flow or computer vision is deployed to analyze the photo taken at the time of water delivery.</li>
+        </ul>
+
+        <h4>bill of materials</h4>
+
+        <h5>hardware</h5>
+        <ul>
+        <li>Raspberry PI, Model B with 512MB</li>
+        <li>solenoid water valve (12v DC, 100mA)</li>
+        <li>TMP36 (GT9) temperature sensor</li>
+        <li>Octopus soil moisture sensor</li>
+        <li>TIP120 darlington pair transistor (NPN, 5A/60v)</li>
+        <li>1N4007 flywheel diode</li>
+        <li>1K, 10K ohm resistors</li>
+        <li>LED</li>
+        <li>MCP3008 AD chip - 10 bit 8 channels</li>
+        <li>12V battery pack (to power the solenoid)</li>
+        <li>Logitech Webcam C210</li>
+        <li>Edimax EW-7811 Wireless USB Adapter</li>
+        <li>Sprint / Netgear Zing Mobile Hotspot - WIFI</li>
+        <li>a plastic cup and a water jug from dollar store</li>
+        </ul>
+
+        <h5>software - RPI</h5>
+        <ul>
+        <li>2013-05-25 Wheezy Raspbian OS</li>
+        <li>Python 2.7 with the following additional modules</li>
+        <li>python-requests (HTTP)</li>
+        <li>python-opencv, scipy, numpy, pip, simple cv (imaging)</li>
+        </ul>
+
+        <h5>software - server</h5>
+        <ul>
+        <li>Google App Engine with Python 2.7 runtime (framework)</li>
+        <li>Google High Replication Datastore (data service)</li>
+        <li>Google Blobstore (image store)</li>
+        </ul>
+
+        <h5>software - client</h5>
+        <ul>
+        <li>HTML5/Javascript/CSS</li>
+        <li>jQuery with jQuery Mobile</li>
+        <li>jtsage datebox.js (date/time widget)</li>
+        <li>moment.js library (date/time utility)</li>
+        <li>webtoolkit-sprintf.js (printf like utility)</li>
+        </ul>
+
+        <h5>development tools</h5>
+        <ul>
+        <li>Win32 disk imager for RPI SD card formatting</li>
+        <li>Filezilla FTP client (file transfer to RPI)</li>
+        <li>PuTTY (terminal to RPI)</li>
+        <li>Tight VNC (to login to RPI)</li>
+        <li>luvcview (camera tester for RPI)</li>
+        <li>HDMI to DVI cable (RPI monitor)</li>
+        <li>USB keyboard/mouse</li>
+        <li>USB power adapter</li>
+        <li>IntelliJ IDE with Google App Engine / Python plugin</li>
+        <li>IdeaVim for vi editor integration</li>
+        <li>GitHub for source control</li>
+        </ul>
+    </div>
+</div>
+
+ </body>
+</html>

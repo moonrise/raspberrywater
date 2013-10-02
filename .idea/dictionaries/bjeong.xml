@@ -1,7 +1,9 @@
 <component name="ProjectDictionaryState">
   <dictionary name="bjeong">
     <words>
+      <w>async</w>
       <w>bjeong</w>
+      <w>blobstore</w>
       <w>columntoggle</w>
       <w>controlgroup</w>
       <w>custombox</w>
@@ -30,6 +32,7 @@
       <w>timebox</w>
       <w>timedout</w>
       <w>viewport</w>
+      <w>webcam</w>
       <w>webtoolkit</w>
     </words>
   </dictionary>
