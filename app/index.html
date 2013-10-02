@@ -71,13 +71,15 @@
 
 <div data-role="page" id="main-page" data-theme="e" style="max-width: 750px">
     <div data-role="header" data-theme="e">
-        <div data-type="horizontal" data-role="controlgroup" class="ui-btn-left">
+        <div data-type="horizontal" data-role="controlgroup" class="ui-btn-left" data-mini="true">
             <a href="doc/doc.html" data-transition="slide" data-direction="reverse"
-               data-icon="info" data-mini="true" data-role="button" data-iconpos="notext">info</a>
-            <a id="details-button" data-role="button" data-icon="grid" data-mini="true">details</a>
+               data-icon="info" data-role="button" data-iconpos="notext">info</a>
+            <a id="details-button" data-role="button" data-icon="grid">details</a>
         </div>
-        <a id="refresh-button" data-role="button" data-icon="refresh" data-iconpos="left"
-           data-mini="true" class="ui-btn-right">refresh</a>
+        <div data-type="horizontal" data-role="controlgroup" class="ui-btn-right" data-mini="true">
+            <a id="refresh-button" data-role="button" data-icon="refresh" data-iconpos="left"
+               data-mini="true">refresh</a>
+        </div>
         <h3>hydroid</h3>
     </div>
 
