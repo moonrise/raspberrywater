@@ -3,6 +3,7 @@
  */
 
 var squirtDetails = (function () {
+    const PhotoPlayInterval = 250;
     const formatter = "<span style='font-weight: lighter;'>%s<span style='color: #7de0c2'>%s</span></span>";
 
     var currentTicket;          // fixed based on the page URL
@@ -13,7 +14,7 @@ var squirtDetails = (function () {
 
     var currentDataItems
     var currentRunId = -1;
-    var stopPlayMode = false
+    var photoPlayMode = 0;          // 0 stopped, 1 forward, -1 backward
 
     var bringDownProgressBar;
 
@@ -26,17 +27,36 @@ var squirtDetails = (function () {
         $("#details-refresh-button").click(onDetailsRefresh);
         $("#delete-confirm-button").click(onDeleteConfirm);
 
+        $("#details-bar").on("swipeleft", function(event) {
+            onDetailsPrev();
+        });
+
+        $("#details-bar").on("swiperight", function(event) {
+            onDetailsNext();
+        });
+
         // table row selection handler
         $("#data-table").on('click', 'tr', onDataTableRowClick);
 
+        // image control handlers
         $("#details-image").on("swipeleft", function(event) {
-            onSwipeImage(true);
+            playPhoto(1);
         });
+
         $("#details-image").on("swiperight", function(event) {
-            onSwipeImage(false);
+            playPhoto(-1);
         });
 
+        $("#details-image").on("tap", function(event) {
+            if (photoPlayMode != 0) {
+                photoPlayMode = 0;      // if in play, stop it
+            }
+            else {
+                movePhoto(event.offsetX > 140);  // about half of 320px width with forward bias
+            }
+        });
 
+        // set the initial context
         currentTicket = $(this).data("url").replace(/.*ticket=/, "");
         setCurrentIndex(-1);
         onDetailsRefresh();
@@ -46,14 +66,58 @@ var squirtDetails = (function () {
         squirtCommon.fetchActiveAndHistoricalList(30, onFetchAllListOK);
     }
 
-    function onSwipeImage(left) {
+    function movePhoto(forward) {
         if (currentDataItems == null || currentDataItems.length < 2) {
             return;
         }
 
-        currentRunId += left ? 1 : -1;
-        stopPlayMode = true;
+        currentRunId += forward ? 1 : -1;
+        if (currentRunId <= 0) {
+            currentRunId = currentDataItems.length;
+        }
+        else if (currentRunId > currentDataItems.length) {
+            currentRunId = 0;
+        }
+
         validateRunIdAndUpdatePhotoSection();
+    }
+
+    function onDetailsPlay() {
+        playPhoto(1);
+    }
+
+    function playPhoto(photoPlay) {
+        if (currentDataItems == null || currentDataItems.length < 2) {
+            return;
+        }
+
+        if (photoPlay == photoPlayMode) {
+            return
+        }
+
+        photoPlayMode = photoPlay;
+        if (photoPlay == 1) {
+            updatePhotoOnTimerForward();
+        }
+        else {
+            updatePhotoOnTimerBackward();
+        }
+    }
+
+    function updatePhotoOnTimerForward() {
+        if (photoPlayMode > 0) {
+            movePhoto(true);
+            //console.debug(sprintf("photo timer: %d", photoPlayMode));
+            setTimeout(updatePhotoOnTimerForward, PhotoPlayInterval);
+        }
+    }
+
+    function updatePhotoOnTimerBackward() {
+        if (photoPlayMode < 0) {
+            movePhoto(false);
+            //console.debug(sprintf("photo timer: %d", photoPlayMode));
+            setTimeout(updatePhotoOnTimerBackward, PhotoPlayInterval);
+        }
     }
 
     function setCurrentIndex(index) {
@@ -96,12 +160,6 @@ var squirtDetails = (function () {
         $("#progress-popup-message").html(message);
     }
 
-    function onDetailsPlay() {
-        stopPlayMode = false;
-        currentRunId = 1;
-        updatePhotoOnTimer();
-    }
-
     function onDeleteConfirm() {
         if (currentItem.finished) {
             setTimeout(function() {     // since we can't nest popups
@@ -120,25 +178,12 @@ var squirtDetails = (function () {
         onDetailsRefresh();
     }
 
-    function updatePhotoOnTimer() {
-        if (stopPlayMode) {
-            return;
-        }
-
-        updatePhotoSection();
-
-        if (currentRunId < currentItem.runsFinished) {
-            currentRunId++;
-            setTimeout(updatePhotoOnTimer, 500);
-        }
-    }
-
     function onDataTableRowClick(event) {
         event.preventDefault();
 
         // it is assumed that the runid is the text from the first column
         currentRunId = parseInt(this.innerText);
-        stopPlayMode = true;
+        photoPlayMode = 0;
         validateRunIdAndUpdatePhotoSection();
     }
 
@@ -228,6 +273,8 @@ var squirtDetails = (function () {
     }
 
     function updateCurrentIndexDetails() {
+        photoPlayMode = 0;
+
         if (currentItem != null) {
             updateDetailsSection(currentItem);
             updateDataTableSection(currentItem);
