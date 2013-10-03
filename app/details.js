@@ -52,7 +52,7 @@ var squirtDetails = (function () {
                 photoPlayMode = 0;      // if in play, stop it
             }
             else {
-                movePhoto(event.offsetX > 140);  // about half of 320px width with forward bias
+                movePhoto(!isLeftEvent(event));
             }
         });
 
@@ -60,6 +60,20 @@ var squirtDetails = (function () {
         currentTicket = $(this).data("url").replace(/.*ticket=/, "");
         setCurrentIndex(-1);
         onDetailsRefresh();
+    }
+
+    function isLeftEvent(event) {
+        var eventAtX = event.clientX;
+        var targetOffsetX = event.currentTarget.offsetLeft;
+        var targetWidth = event.currentTarget.offsetWidth;
+
+        // the syntax error in the next line *.0.0.4 completed baffled me
+        // in that the whole script file did not get loaded. save this as
+        // the future reference.
+        // return (eventAtX - targetOffsetX) < (targetWidth *.0.4);
+
+        // about half of 320px width with forward bias
+        return (eventAtX - targetOffsetX) < (targetWidth * 0.4);
     }
 
     function onDetailsRefresh() {
