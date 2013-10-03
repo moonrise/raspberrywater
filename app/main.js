@@ -90,10 +90,18 @@ var squirtMain = (function () {
         // runs
         //
         $("#runs-header .ui-btn-text").html(ds.runs.getTitleHtml());
+        changeIntervalVisualState(false);
 
         $("#runs").on('change', function(event) {
             ds.runs.setValue(event.target.value);
             $("#runs-header .ui-btn-text").html(ds.runs.getTitleHtml());
+
+            if (ds.runs.getValue() == 1) {
+                changeIntervalVisualState(false);
+            }
+            else {
+                changeIntervalVisualState(true);
+            }
         });
 
         //
@@ -148,6 +156,17 @@ var squirtMain = (function () {
                 $("#start-header .ui-btn-text").html(ds.start.getTitleHtml());
             }
         });
+    }
+
+    function changeIntervalVisualState(enable) {
+        if (enable) {
+            $("#interval-header .ui-btn").buttonMarkup({theme: 'e'});
+            $("#interval-header .ui-btn-text").removeClass("ui-disabled");
+        }
+        else {
+            $("#interval-header .ui-btn").buttonMarkup({theme: 'd'});
+            $("#interval-header .ui-btn-text").addClass("ui-disabled");
+        }
     }
 
     function updateRemoteStateRepeatedly() {
