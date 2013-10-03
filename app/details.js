@@ -149,7 +149,7 @@ var squirtDetails = (function () {
         if (message != null && message.length > 0) {
             bringDownProgressBar = true;
             updateBlockedDialogMessage(message);
-            $("#progress-popup").popup("open", { positionTo: '#details-page'});
+            $("#progress-popup").popup("open", { positionTo: '#details-page', y: 150});
         }
         else {
             $("#progress-popup").popup("close");
@@ -174,7 +174,21 @@ var squirtDetails = (function () {
 
     function onDeleteOK(jsonResponse) {
         updateBlockedDialogMessage("Deleted. Updating the current view...");
-        currentTicket = -1;
+
+        // computer new index to be displayed after the refresh
+        var newTargetIndex = currentIndex + 1;
+        if (newTargetIndex >= historyItems.length) {
+            newTargetIndex = historyItems.length - 1;
+        }
+
+        if (newTargetIndex < 0) {
+            currentTicket = -1;
+        }
+        else {
+            currentTicket = historyItems[newTargetIndex].ticket;
+            currentIndex = -1;
+        }
+
         onDetailsRefresh();
     }
 
@@ -240,8 +254,7 @@ var squirtDetails = (function () {
         if (currentItem.finished) {
             $("#details-delete-button .ui-btn-text").html("delete");
             $("#delete-prompt-message").text(
-                sprintf("Are you sure you want to delete task %d (delete can take a few seconds for " +
-                    "this page to reflect the deletion)?", currentItem.ticket));
+                sprintf("Are you sure you want to delete task %d?", currentItem.ticket));
         }
         else {
             $("#details-delete-button .ui-btn-text").html("cancel");
@@ -269,6 +282,7 @@ var squirtDetails = (function () {
         if (bringDownProgressBar) {
             bringDownProgressBar = false;
             displayBlockedDialog(null);
+            updateCurrentIndexDetails();
         }
     }
 
