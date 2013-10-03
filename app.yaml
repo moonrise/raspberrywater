@@ -9,7 +9,7 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
-- url: /(.*\.(html|js|css|png|jpg|gif))
+- url: /(.*\.(html|js|css|png|jpg|gif|mp4))
   static_files: app/\1
   upload: app/.*
 

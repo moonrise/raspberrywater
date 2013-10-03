@@ -21,33 +21,37 @@
     <div data-role="content" data-scroll="true" style="overflow: auto">
         <h3>Hydroid</h3>
         Hydroid is a device built on Raspberry PI that is capable of watering plants
-        and reporting the plant status via webcam along with environment variables like
+        and reporting the plant status via still photos along with environment variables like
         ambient temperature and soil moisture. The user interface to hydroid is built
         with mobility in mind over cloud infrastructure provided by Google Application
         server. Unexpectedly from the initial intent, the scheduling feature turned out
-        to be handsomely suitable for remote time lapse photo series as well.
+        to be handsomely suitable for remote time lapse photo series as well. Here is a video
+        clip that shows the watering in action.
 
-        <h4>Schematics</h4>
-        Hydroid system is made of three major components:
+        <video width="320" height="240" controls style="margin-top: 10px">
+            <source src="/doc/video/hydroid.mp4" type="video/mp4">
+            html5 video tag is not supported.
+        </video>
+
+        <h4>System Overview</h4>
+        Hydroid system is made of three major components with HTTP as the communication link betwen them:
         <ul>
-        <li>hydroid hardware device built on Raspberry PI</li>
-        <li>client applications that are deployed to mobile device browsers</li>
-        <li>server application built on Google Application Engine</li>
+        <li>hydroid hardware built on Raspberry PI</li>
+        <li>client applications on mobile device browsers</li>
+        <li>server application on Google Application Engine</li>
         </ul>
 
-        The communication protocol between these components are HTTP. See the schematic diagram below as an overview.
         <image src="/doc/images/hydroid-schematic.png" style="margin: 10px"/>
 
         <h4>features - hardware</h4>
-        Hydroid hardware is illustrated in the photo below along with the circuit diagram.
         <ul>
-        <li>solenoid is released to dispense the water between 1 and 5 drops per user request.</li>
-        <li>manual button can be pressed in the circuit board to release one drop of water</li>
-        <li>blinking LED tells the system running status</li>
-        <li>ambient temperature is obtained upon request</li>
-        <li>soil moisture is read between 0% and 100% if the sensor is inserted in the soil. 0% is reported if the sensor is out in the air while 100% is expected if the sensor is immersed in water.</li>
-        <li>MCP3800 AD converter supports upto 8 channels of analog inputs even though only two channels are utilized for temperature and moisture sensing</li>
-        <li>camera is equipped to upload a photo taken on demand</li>
+        <li>solenoid control to dispense water drops</li>
+        <li>manual button in the circuit board to release one drop</li>
+        <li>blinking LED for the system running status</li>
+        <li>ambient temperature read</li>
+        <li>soil moisture read between 0% and 100%</li>
+        <li>MCP3800 AD converter supports up to 8 channels of analog inputs</li>
+        <li>camera for static photos</li>
         <li>the system automatically recovers on network failure and system restarts</li>
         <li>the system is implemented with python 2.7 with a few additional modules imported to support HTTP/Json and imaging support</li>
         <li>wireless network support</li>
@@ -60,15 +64,14 @@
         <h4>features - client</h4>
         The client application is accessed from any browsers by pointing to “http://waterthem.appspot.com/index.html”. The application is written in HTML5/JavaScript/CSS to service wide variety of platforms. It is optimally designed and tested for Android and IPhone devices. It should work on any devices that jQueryMobile is supported. A photo taken from hydroid system is shown below with the timestamp on the top left.
         <ul>
-        <li>the home screen reports the last reported hydroid heart-beat time along with the temperature and soil moisture</li>
-        <li>a photo (320x240) can be requested anytime with a click of a button (photo status are not automatically refreshed to save bandwidth)</li>
-        <li>a watering request can be made from the request panel with scheduling capability</li>
-        <li>active tasks are reported in the active tasks panel</li>
-        <li>most recent N number of historical jobs are listed in the history panel. clicking on an item in the list will take you to the details panel</li>
-        <li>each refresh button adds 60 seconds of polling with 1 second interval to refresh the status of the screen</li>
-        <li>In details page, a series of photos can be played with 0.5 second interval if multiple photos are available. This can be useful for time lapse photo replay.</li>
-        <li>a scheduled or running task can be can canceled in the details page</li>
-        <li>a completed task can be deleted in the details page</li>
+        <li>on demand hydroid heart-beat along with the temperature and soil moisture</li>
+        <li>on demand photo (320x240) request with a click of a button</li>
+        <li>on demand or scheduled watering task</li>
+        <li>active tasks reports in the active tasks panel</li>
+        <li>most recent N number of historical jobs in the history panel</li>
+        <li>one minute refresh button for each press</li>
+        <li>a series of photos can be played with 0.25 second interval</li>
+        <li>cancel support for scheduled tasks</li>
         </ul>
 
         <image src="/doc/images/from-hydroid-lens.jpg" style="margin: 10px"/>
