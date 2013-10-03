@@ -28,11 +28,11 @@ var squirtDetails = (function () {
         $("#delete-confirm-button").click(onDeleteConfirm);
 
         $("#details-bar").on("swipeleft", function(event) {
-            onDetailsPrev();
+            onDetailsNext();
         });
 
         $("#details-bar").on("swiperight", function(event) {
-            onDetailsNext();
+            onDetailsPrev();
         });
 
         // table row selection handler
