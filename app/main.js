@@ -214,7 +214,7 @@ var squirtMain = (function () {
         var historyListCid = jsonResponse.historyListCid;
         if (historyListCid != myHistoryListCid) {
             myHistoryListCid = historyListCid;
-            squirtCommon.fetchHistoryList(10, onFetchHistoryListOK);
+            squirtCommon.fetchHistoryList(50, onFetchHistoryListOK);
         }
     }
 
