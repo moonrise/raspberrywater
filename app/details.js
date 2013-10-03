@@ -163,7 +163,10 @@ var squirtDetails = (function () {
         if (message != null && message.length > 0) {
             bringDownProgressBar = true;
             updateBlockedDialogMessage(message);
-            $("#progress-popup").popup("open", { positionTo: '#details-page', y: 150});
+            // could not get the positioning thing working!!
+            // $("#progress-popup").popup("open", { positionTo: $('#details-bar') });
+            // $("#progress-popup").popup("open", { positionTo: '#section-line-header' });
+            $("#progress-popup").popup("open");
         }
         else {
             $("#progress-popup").popup("close");
