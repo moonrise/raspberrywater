@@ -29,6 +29,14 @@ var squirtDetails = (function () {
         // table row selection handler
         $("#data-table").on('click', 'tr', onDataTableRowClick);
 
+        $("#details-image").on("swipeleft", function(event) {
+            onSwipeImage(true);
+        });
+        $("#details-image").on("swiperight", function(event) {
+            onSwipeImage(false);
+        });
+
+
         currentTicket = $(this).data("url").replace(/.*ticket=/, "");
         setCurrentIndex(-1);
         onDetailsRefresh();
@@ -36,6 +44,16 @@ var squirtDetails = (function () {
 
     function onDetailsRefresh() {
         squirtCommon.fetchActiveAndHistoricalList(30, onFetchAllListOK);
+    }
+
+    function onSwipeImage(left) {
+        if (currentDataItems == null || currentDataItems.length < 2) {
+            return;
+        }
+
+        currentRunId += left ? 1 : -1;
+        stopPlayMode = true;
+        validateRunIdAndUpdatePhotoSection();
     }
 
     function setCurrentIndex(index) {
